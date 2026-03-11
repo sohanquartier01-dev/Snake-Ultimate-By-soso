@@ -64,6 +64,24 @@ from{transform:translateY(0px)}
 to{transform:translateY(-10px)}
 }
 
+/* CONTROLES MOBILE */
+
+#mobileControls{
+margin-top:20px;
+display:none;
+}
+
+#mobileControls button{
+font-size:30px;
+padding:15px 20px;
+}
+
+@media (max-width:768px){
+#mobileControls{
+display:block;
+}
+}
+
 </style>
 
 </head>
@@ -97,6 +115,18 @@ to{transform:translateY(-10px)}
 <p id="objective"></p>
 
 <canvas id="canvas" width="400" height="400"></canvas>
+
+<div id="mobileControls">
+
+<button onclick="mobileDir('up')">⬆️</button>
+
+<br>
+
+<button onclick="mobileDir('left')">⬅️</button>
+<button onclick="mobileDir('down')">⬇️</button>
+<button onclick="mobileDir('right')">➡️</button>
+
+</div>
 
 </div>
 
@@ -247,6 +277,17 @@ if(e.key==="ArrowUp" && dy==0){dx=0;dy=-20}
 if(e.key==="ArrowDown" && dy==0){dx=0;dy=20}
 if(e.key==="ArrowLeft" && dx==0){dx=-20;dy=0}
 if(e.key==="ArrowRight" && dx==0){dx=20;dy=0}
+
+}
+
+/* CONTROLES MOBILE */
+
+function mobileDir(dir){
+
+if(dir==="up" && dy==0){dx=0;dy=-20}
+if(dir==="down" && dy==0){dx=0;dy=20}
+if(dir==="left" && dx==0){dx=-20;dy=0}
+if(dir==="right" && dx==0){dx=20;dy=0}
 
 }
 
