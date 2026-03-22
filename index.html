@@ -162,7 +162,7 @@ let dy
 let score
 let interval
 
-let gridSize = 15 // PLUS DE CASES
+let gridSize = 15
 
 let mode="classic"
 
@@ -175,6 +175,16 @@ let colors=[
 "lime","cyan","orange","yellow","pink",
 "purple","red","blue","gold","white"
 ]
+
+/* IMAGES */
+let appleImg = new Image()
+appleImg.src = "images/apple.png"
+
+let goldenAppleImg = new Image()
+goldenAppleImg.src = "images/golden_apple.png"
+
+let snakeHeadImg = new Image()
+snakeHeadImg.src = "images/snake_head.png"
 
 let bestScore=localStorage.getItem("snakeBest")||0
 document.getElementById("bestScore").innerText="Meilleur score : "+bestScore
@@ -250,7 +260,7 @@ document.getElementById("objective").innerText="Niveau "+level+" | Objectif : "+
 document.getElementById("objective").innerText=""
 }
 
-interval=setInterval(loop,130) // PLUS LENT
+interval=setInterval(loop,130)
 
 }
 
@@ -258,11 +268,11 @@ function randomFood(){
 return{
 x:Math.floor(Math.random()*(400/gridSize))*gridSize,
 y:Math.floor(Math.random()*(400/gridSize))*gridSize,
-gold:Math.random()<0.1 // POMME DOREE
+gold:Math.random()<0.1
 }
 }
 
-/* CLAVIER */
+/* CONTROLES */
 
 document.addEventListener("keydown",direction)
 
@@ -275,8 +285,6 @@ if((e.key==="ArrowRight"||e.key==="d") && dx==0){dx=gridSize;dy=0}
 
 }
 
-/* BOUTONS MOBILE */
-
 function mobileDir(dir){
 
 if(dir==="up" && dy==0){dx=0;dy=-gridSize}
@@ -286,7 +294,7 @@ if(dir==="right" && dx==0){dx=gridSize;dy=0}
 
 }
 
-/* SWIPE MOBILE */
+/* SWIPE */
 
 let startX=0
 let startY=0
@@ -370,6 +378,7 @@ return
 snake.pop()
 }
 
+/* FOND */
 ctx.fillStyle="#111"
 ctx.fillRect(0,0,400,400)
 
@@ -387,33 +396,21 @@ ctx.lineTo(400,i)
 ctx.stroke()
 }
 
-/* POMME */
-ctx.fillStyle = food.gold ? "gold" : "red"
-ctx.fillRect(food.x,food.y,gridSize,gridSize)
+/* POMME IMAGE */
+if(food.gold){
+ctx.drawImage(goldenAppleImg,food.x,food.y,gridSize,gridSize)
+}else{
+ctx.drawImage(appleImg,food.x,food.y,gridSize,gridSize)
+}
 
 /* SERPENT */
 snake.forEach((p,i)=>{
 
+if(i==0){
+ctx.drawImage(snakeHeadImg,p.x,p.y,gridSize,gridSize)
+}else{
 ctx.fillStyle=snakeColor
 ctx.fillRect(p.x,p.y,gridSize,gridSize)
-
-/* TETE */
-if(i==0){
-ctx.fillStyle="white"
-
-ctx.beginPath()
-ctx.arc(p.x+4,p.y+4,2,0,Math.PI*2)
-ctx.fill()
-
-ctx.beginPath()
-ctx.arc(p.x+10,p.y+4,2,0,Math.PI*2)
-ctx.fill()
-
-ctx.strokeStyle="black"
-ctx.beginPath()
-ctx.moveTo(p.x+4,p.y+10)
-ctx.lineTo(p.x+10,p.y+10)
-ctx.stroke()
 }
 
 })
