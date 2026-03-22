@@ -69,8 +69,6 @@ from{transform:translateY(0px)}
 to{transform:translateY(-10px)}
 }
 
-/* BOUTONS MOBILE */
-
 #mobileControls{
 margin-top:15px;
 display:none;
@@ -164,6 +162,8 @@ let dy
 let score
 let interval
 
+let gridSize = 15 // PLUS DE CASES
+
 let mode="classic"
 
 let level=1
@@ -238,7 +238,7 @@ document.getElementById("game").style.display="block"
 snake=[{x:200,y:200}]
 food=randomFood()
 
-dx=20
+dx=gridSize
 dy=0
 score=0
 
@@ -250,14 +250,15 @@ document.getElementById("objective").innerText="Niveau "+level+" | Objectif : "+
 document.getElementById("objective").innerText=""
 }
 
-interval=setInterval(loop,100)
+interval=setInterval(loop,130) // PLUS LENT
 
 }
 
 function randomFood(){
 return{
-x:Math.floor(Math.random()*20)*20,
-y:Math.floor(Math.random()*20)*20
+x:Math.floor(Math.random()*(400/gridSize))*gridSize,
+y:Math.floor(Math.random()*(400/gridSize))*gridSize,
+gold:Math.random()<0.1 // POMME DOREE
 }
 }
 
@@ -267,10 +268,10 @@ document.addEventListener("keydown",direction)
 
 function direction(e){
 
-if((e.key==="ArrowUp"||e.key==="w") && dy==0){dx=0;dy=-20}
-if((e.key==="ArrowDown"||e.key==="s") && dy==0){dx=0;dy=20}
-if((e.key==="ArrowLeft"||e.key==="a") && dx==0){dx=-20;dy=0}
-if((e.key==="ArrowRight"||e.key==="d") && dx==0){dx=20;dy=0}
+if((e.key==="ArrowUp"||e.key==="w") && dy==0){dx=0;dy=-gridSize}
+if((e.key==="ArrowDown"||e.key==="s") && dy==0){dx=0;dy=gridSize}
+if((e.key==="ArrowLeft"||e.key==="a") && dx==0){dx=-gridSize;dy=0}
+if((e.key==="ArrowRight"||e.key==="d") && dx==0){dx=gridSize;dy=0}
 
 }
 
@@ -278,10 +279,10 @@ if((e.key==="ArrowRight"||e.key==="d") && dx==0){dx=20;dy=0}
 
 function mobileDir(dir){
 
-if(dir==="up" && dy==0){dx=0;dy=-20}
-if(dir==="down" && dy==0){dx=0;dy=20}
-if(dir==="left" && dx==0){dx=-20;dy=0}
-if(dir==="right" && dx==0){dx=20;dy=0}
+if(dir==="up" && dy==0){dx=0;dy=-gridSize}
+if(dir==="down" && dy==0){dx=0;dy=gridSize}
+if(dir==="left" && dx==0){dx=-gridSize;dy=0}
+if(dir==="right" && dx==0){dx=gridSize;dy=0}
 
 }
 
@@ -305,13 +306,13 @@ let diffY=endY-startY
 
 if(Math.abs(diffX)>Math.abs(diffY)){
 
-if(diffX>0 && dx==0){dx=20;dy=0}
-else if(diffX<0 && dx==0){dx=-20;dy=0}
+if(diffX>0 && dx==0){dx=gridSize;dy=0}
+else if(diffX<0 && dx==0){dx=-gridSize;dy=0}
 
 }else{
 
-if(diffY>0 && dy==0){dx=0;dy=20}
-else if(diffY<0 && dy==0){dx=0;dy=-20}
+if(diffY>0 && dy==0){dx=0;dy=gridSize}
+else if(diffY<0 && dy==0){dx=0;dy=-gridSize}
 
 }
 
@@ -340,7 +341,12 @@ snake.unshift(head)
 
 if(head.x==food.x && head.y==food.y){
 
+if(food.gold){
+score+=3
+}else{
 score++
+}
+
 document.getElementById("score").innerText="Score : "+score
 
 food=randomFood()
@@ -367,13 +373,48 @@ snake.pop()
 ctx.fillStyle="#111"
 ctx.fillRect(0,0,400,400)
 
-ctx.fillStyle="red"
-ctx.fillRect(food.x,food.y,20,20)
+/* GRILLE */
+ctx.strokeStyle="#222"
+for(let i=0;i<400;i+=gridSize){
+ctx.beginPath()
+ctx.moveTo(i,0)
+ctx.lineTo(i,400)
+ctx.stroke()
 
+ctx.beginPath()
+ctx.moveTo(0,i)
+ctx.lineTo(400,i)
+ctx.stroke()
+}
+
+/* POMME */
+ctx.fillStyle = food.gold ? "gold" : "red"
+ctx.fillRect(food.x,food.y,gridSize,gridSize)
+
+/* SERPENT */
 snake.forEach((p,i)=>{
 
 ctx.fillStyle=snakeColor
-ctx.fillRect(p.x,p.y,20,20)
+ctx.fillRect(p.x,p.y,gridSize,gridSize)
+
+/* TETE */
+if(i==0){
+ctx.fillStyle="white"
+
+ctx.beginPath()
+ctx.arc(p.x+4,p.y+4,2,0,Math.PI*2)
+ctx.fill()
+
+ctx.beginPath()
+ctx.arc(p.x+10,p.y+4,2,0,Math.PI*2)
+ctx.fill()
+
+ctx.strokeStyle="black"
+ctx.beginPath()
+ctx.moveTo(p.x+4,p.y+10)
+ctx.lineTo(p.x+10,p.y+10)
+ctx.stroke()
+}
 
 })
 
