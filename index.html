@@ -106,6 +106,16 @@ display:block;
 <button onclick="startClassic()">Mode Classique</button>
 <button onclick="openAdventure()">Mode aventure</button>
 
+<!-- 🔹 PROFIL / CLASSEMENT -->
+<div id="profileMenu" style="display:none">
+  <h1>Profil</h1>
+  <p>Pseudo : <input type="text" id="username" placeholder="Ton pseudo"></p>
+  <button onclick="saveUsername()">Sauvegarder pseudo</button>
+  <p id="userEmail"></p>
+  <button onclick="logout()">Se déconnecter</button>
+  <h2>Classement</h2>
+  <div id="leaderboard"></div>
+  <button onclick="backToMenuFromProfile()">Retour au menu</button>
 </div>
 
 <div id="adventureMenu" style="display:none">
@@ -170,6 +180,53 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+
+  // 🔹 AUTHENTIFICATION & PROFIL
+firebase.auth().onAuthStateChanged(user => {
+  if(user){
+    let storedName = localStorage.getItem("snakeUsername") || "Joueur"
+    document.getElementById("username").value = storedName
+    document.getElementById("userEmail").innerText = "Connecté : " + (user.isAnonymous ? "Anonyme" : user.email)
+    updateLeaderboard()
+  } else loginAnonyme()
+})
+
+function loginAnonyme(){
+  firebase.auth().signInAnonymously().catch(err => console.log(err))
+}
+
+function logout(){
+  firebase.auth().signOut()
+}
+
+// 🔹 USERNAME
+function saveUsername(){
+  let name = document.getElementById("username").value
+  if(name.length>0){
+    localStorage.setItem("snakeUsername", name)
+    alert("Pseudo sauvegardé : " + name)
+    updateLeaderboard()
+  }
+}
+
+// 🔹 LEADERBOARD
+function updateLeaderboard(){
+  db.collection("scores").orderBy("score","desc").limit(10).get()
+  .then(snapshot => {
+    let lb = document.getElementById("leaderboard"); 
+    lb.innerHTML = ""
+    snapshot.forEach(doc => {
+      let div = document.createElement("div")
+      div.innerText = doc.data().name + " : " + doc.data().score
+      lb.appendChild(div)
+    })
+  })
+}
+
+function backToMenuFromProfile(){
+  document.getElementById("profileMenu").style.display="none"
+  document.getElementById("menu").style.display="block"
+}
 
 let canvas=document.getElementById("canvas")
 let ctx=canvas.getContext("2d")
@@ -374,9 +431,19 @@ document.getElementById("score").innerText="Score : "+score
 food=randomFood()
 
 if(score>bestScore){
-bestScore=score
-localStorage.setItem("snakeBest",bestScore)
-document.getElementById("bestScore").innerText="Meilleur score : "+bestScore
+    bestScore=score
+    localStorage.setItem("snakeBest",bestScore)
+    document.getElementById("bestScore").innerText="Meilleur score : "+bestScore
+
+    // 🔹 Enregistrement sur Firebase
+    if(firebase.auth().currentUser){
+        let name = localStorage.getItem("snakeUsername") || "Joueur"
+        db.collection("scores").doc(firebase.auth().currentUser.uid).set({
+            name: name,
+            score: bestScore
+        })
+        updateLeaderboard()
+    }
 }
 
 if(mode=="classic"){
