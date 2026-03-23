@@ -91,13 +91,51 @@ display:block;
 }
 }
 
-</style>
+input{
+padding:10px;
+margin:5px;
+border-radius:5px;
+border:none;
+font-size:16px;
+}
 
+#loginScreen, #signupScreen, #profileScreen, #leaderboardScreen{
+display:none;
+}
+
+</style>
 </head>
 
 <body>
 
-<div id="menu">
+<!-- Écran de connexion / inscription -->
+<div id="signupScreen">
+<h1>Bienvenue sur Snake Ultimate</h1>
+<p>Choisissez un pseudo (3-10 caractères) et un mot de passe</p>
+<input type="text" id="signupUsername" placeholder="Pseudo">
+<br>
+<input type="password" id="signupPassword" placeholder="Mot de passe">
+<br>
+<button onclick="signup()">Continuer</button>
+<br>
+<button onclick="showLogin()">Déjà connecté ?</button>
+<p id="signupMessage" style="color:red"></p>
+</div>
+
+<div id="loginScreen">
+<h1>Connecte-toi</h1>
+<input type="text" id="loginUsername" placeholder="Pseudo">
+<br>
+<input type="password" id="loginPassword" placeholder="Mot de passe">
+<br>
+<button onclick="login()">Se connecter</button>
+<br>
+<button onclick="showSignup()">Créer un compte</button>
+<p id="loginMessage" style="color:red"></p>
+</div>
+
+<!-- Menu principal -->
+<div id="menu" style="display:none">
 
 <h1 id="snakeTitle">🐍 Snake Ultimate</h1>
 
@@ -105,59 +143,60 @@ display:block;
 
 <button onclick="startClassic()">Mode Classique</button>
 <button onclick="openAdventure()">Mode aventure</button>
+<button onclick="showLeaderboard()">Classement</button>
+<button onclick="showProfile()">Profil</button>
 
 </div>
 
 <div id="adventureMenu" style="display:none">
-
 <h1>Mode aventure</h1>
-
 <div id="levels"></div>
-
 <button onclick="backToMenu()">Retour</button>
-
 </div>
 
 <div id="game" style="display:none">
-
 <h2 id="score">Score : 0</h2>
 <p id="objective"></p>
-
 <canvas id="canvas" width="400" height="400"></canvas>
-
 <div id="mobileControls">
-
 <button onclick="mobileDir('up')">⬆️</button>
 <br>
 <button onclick="mobileDir('left')">⬅️</button>
 <button onclick="mobileDir('down')">⬇️</button>
 <button onclick="mobileDir('right')">➡️</button>
-
 </div>
-
 </div>
 
 <div id="gameover" style="display:none">
-
 <h1>💀 Game Over</h1>
-
 <button onclick="restartLevel()">Rejouer</button>
 <button onclick="backToMenu()">Retour au lobby</button>
-
 </div>
 
 <div id="win" style="display:none">
-
 <h1>🏆 Niveau terminé</h1>
-
 <button onclick="nextLevel()">Niveau suivant</button>
 <button onclick="backToMenu()">Retour au lobby</button>
+</div>
 
+<!-- Profil et classement -->
+<div id="profileScreen">
+<h1>Profil</h1>
+<p id="profileUsername"></p>
+<p id="profileBestScore"></p>
+<p id="profileTotalFruits"></p>
+<p id="profileTotalTime"></p>
+<button onclick="backToMenu()">Retour</button>
+</div>
+
+<div id="leaderboardScreen">
+<h1>Top 10 Monde</h1>
+<div id="leaderboardList"></div>
+<button onclick="backToMenu()">Retour</button>
 </div>
 
 <script>
-
-<!-- 🔥 FIREBASE CONFIG -->
+// 🔥 FIREBASE CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyDdzcbtAwYXDPfM1RAOk3YzzDfRoQcomFQ",
   authDomain: "snake-ultimate-by-soso.firebaseapp.com",
@@ -171,304 +210,228 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-let canvas=document.getElementById("canvas")
-let ctx=canvas.getContext("2d")
+// --- AUTH & ACCOUNT MANAGEMENT ---
+let currentUser = null;
+let sessionStart = Date.now();
 
-let snake
-let food
-let dx
-let dy
-let score
-let interval
-
-let gridSize = 20
-
-let mode="classic"
-
-let level=1
-let levelGoal=10
-
-let snakeColor="lime"
-
-let colors=[
-"lime","cyan","orange","yellow","pink",
-"purple","red","blue","gold","white"
-]
-
-let appleImg = new Image()
-appleImg.src = "apple.png"
-
-let goldenAppleImg = new Image()
-goldenAppleImg.src = "golden_apple.png"
-
-let snakeHeadImg = new Image()
-snakeHeadImg.src = "snake_head.png"
-
-let bestScore=localStorage.getItem("snakeBest")||0
-document.getElementById("bestScore").innerText="Meilleur score : "+bestScore
-
-function startClassic(){
-mode="classic"
-startGame()
+function showSignup(){
+  document.getElementById("signupScreen").style.display="block";
+  document.getElementById("loginScreen").style.display="none";
 }
 
-function openAdventure(){
-document.getElementById("menu").style.display="none"
-document.getElementById("adventureMenu").style.display="block"
-updateAdventureUI()
+function showLogin(){
+  document.getElementById("signupScreen").style.display="none";
+  document.getElementById("loginScreen").style.display="block";
 }
 
+async function signup(){
+  const username = document.getElementById("signupUsername").value.trim();
+  const password = document.getElementById("signupPassword").value;
+  const message = document.getElementById("signupMessage");
+  
+  if(username.length<3 || username.length>10 || !password){
+    message.innerText="Veuillez entrer un pseudo (3-10 lettres) et un mot de passe";
+    return;
+  }
+
+  const userDoc = await db.collection("users").doc(username).get();
+  if(userDoc.exists){
+    message.innerText="Ce pseudo est déjà pris, veuillez en choisir un autre";
+    return;
+  }
+
+  await db.collection("users").doc(username).set({
+    password: password,
+    bestScore: 0,
+    totalFruits: 0,
+    totalTime: 0
+  });
+
+  currentUser = username;
+  startSession();
+}
+
+async function login(){
+  const username = document.getElementById("loginUsername").value.trim();
+  const password = document.getElementById("loginPassword").value;
+  const message = document.getElementById("loginMessage");
+
+  const userDoc = await db.collection("users").doc(username).get();
+  if(!userDoc.exists || userDoc.data().password !== password){
+    message.innerText="Pseudo ou mot de passe incorrect";
+    return;
+  }
+
+  currentUser = username;
+  startSession();
+}
+
+function startSession(){
+  sessionStart = Date.now();
+  document.getElementById("signupScreen").style.display="none";
+  document.getElementById("loginScreen").style.display="none";
+  document.getElementById("menu").style.display="block";
+  updateAdventureUI();
+  loadUserStats();
+}
+
+// --- USER STATS & PROFILE ---
+async function loadUserStats(){
+  const userDoc = await db.collection("users").doc(currentUser).get();
+  if(userDoc.exists){
+    const data = userDoc.data();
+    document.getElementById("bestScore").innerText="Meilleur score : "+data.bestScore;
+  }
+}
+
+async function updateUserStats(score, fruits){
+  if(!currentUser) return;
+  const userRef = db.collection("users").doc(currentUser);
+  const userDoc = await userRef.get();
+  if(!userDoc.exists) return;
+
+  const prevData = userDoc.data();
+  const bestScore = Math.max(prevData.bestScore, score);
+  const totalFruits = prevData.totalFruits + fruits;
+  const totalTime = prevData.totalTime + Math.floor((Date.now()-sessionStart)/1000);
+
+  await userRef.update({
+    bestScore,
+    totalFruits,
+    totalTime
+  });
+  loadUserStats();
+}
+
+// --- LEADERBOARD ---
+async function showLeaderboard(){
+  document.getElementById("menu").style.display="none";
+  document.getElementById("leaderboardScreen").style.display="block";
+
+  const topUsers = await db.collection("users").orderBy("bestScore","desc").limit(10).get();
+  const list = document.getElementById("leaderboardList");
+  list.innerHTML="";
+  topUsers.forEach(doc=>{
+    const div = document.createElement("div");
+    div.innerText = doc.id + " : " + doc.data().bestScore;
+    list.appendChild(div);
+  });
+}
+
+// --- PROFILE ---
+async function showProfile(){
+  document.getElementById("menu").style.display="none";
+  document.getElementById("profileScreen").style.display="block";
+
+  const userDoc = await db.collection("users").doc(currentUser).get();
+  if(userDoc.exists){
+    const data = userDoc.data();
+    document.getElementById("profileUsername").innerText="Pseudo : "+currentUser;
+    document.getElementById("profileBestScore").innerText="Meilleur score : "+data.bestScore;
+    document.getElementById("profileTotalFruits").innerText="Fruits mangés : "+data.totalFruits;
+    const time = Math.floor((Date.now()-sessionStart)/1000)+data.totalTime;
+    document.getElementById("profileTotalTime").innerText="Temps total sur le site : "+time+" secondes";
+  }
+}
+
+// --- GAME CODE ---
+let canvas=document.getElementById("canvas");
+let ctx=canvas.getContext("2d");
+
+let snake, food, dx, dy, score, interval;
+let gridSize=20;
+let mode="classic";
+let level=1;
+let levelGoal=10;
+let snakeColor="lime";
+let colors=["lime","cyan","orange","yellow","pink","purple","red","blue","gold","white"];
+let appleImg=new Image(); appleImg.src="apple.png";
+let goldenAppleImg=new Image(); goldenAppleImg.src="golden_apple.png";
+let snakeHeadImg=new Image(); snakeHeadImg.src="snake_head.png";
+
+function startClassic(){ mode="classic"; startGame(); }
+function openAdventure(){ document.getElementById("menu").style.display="none"; document.getElementById("adventureMenu").style.display="block"; updateAdventureUI(); }
 function updateAdventureUI(){
-
-let container=document.getElementById("levels")
-container.innerHTML=""
-
-for(let i=1;i<=10;i++){
-
-let div=document.createElement("div")
-div.className="level"
-
-let goal=i*10
-
-if(localStorage.getItem("level"+i)){
-div.classList.add("completed")
+  let container=document.getElementById("levels"); container.innerHTML="";
+  for(let i=1;i<=10;i++){
+    let div=document.createElement("div"); div.className="level";
+    let goal=i*10;
+    if(localStorage.getItem("level"+i)) div.classList.add("completed");
+    div.innerText="Niveau "+i+" - Score requis : "+goal;
+    div.onclick=()=>startAdventure(i);
+    container.appendChild(div);
+  }
 }
-
-div.innerText="Niveau "+i+" - Score requis : "+goal
-div.onclick=()=>startAdventure(i)
-
-container.appendChild(div)
-
-}
-
-}
-
-function startAdventure(lvl){
-
-mode="adventure"
-level=lvl
-levelGoal=lvl*10
-snakeColor=colors[lvl-1]
-
-startGame()
-
-}
-
+function startAdventure(lvl){ mode="adventure"; level=lvl; levelGoal=lvl*10; snakeColor=colors[lvl-1]; startGame(); }
 function startGame(){
-
-document.getElementById("menu").style.display="none"
-document.getElementById("adventureMenu").style.display="none"
-document.getElementById("gameover").style.display="none"
-document.getElementById("win").style.display="none"
-
-document.getElementById("game").style.display="block"
-
-snake=[{x:200,y:200}]
-food=randomFood()
-
-dx=gridSize
-dy=0
-score=0
-
-document.getElementById("score").innerText="Score : 0"
-
-if(mode=="adventure"){
-document.getElementById("objective").innerText="Niveau "+level+" | Objectif : "+levelGoal
-}else{
-document.getElementById("objective").innerText=""
+  document.getElementById("menu").style.display="none";
+  document.getElementById("adventureMenu").style.display="none";
+  document.getElementById("gameover").style.display="none";
+  document.getElementById("win").style.display="none";
+  document.getElementById("game").style.display="block";
+  snake=[{x:200,y:200}]; food=randomFood();
+  dx=gridSize; dy=0; score=0;
+  document.getElementById("score").innerText="Score : 0";
+  if(mode=="adventure") document.getElementById("objective").innerText="Niveau "+level+" | Objectif : "+levelGoal;
+  else document.getElementById("objective").innerText="";
+  interval=setInterval(loop,130);
 }
-
-interval=setInterval(loop,130)
-
-}
-
-function randomFood(){
-return{
-x:Math.floor(Math.random()*(400/gridSize))*gridSize,
-y:Math.floor(Math.random()*(400/gridSize))*gridSize,
-gold:Math.random()<0.1
-}
-}
-
-document.addEventListener("keydown",direction)
-
+function randomFood(){ return {x:Math.floor(Math.random()*(400/gridSize))*gridSize, y:Math.floor(Math.random()*(400/gridSize))*gridSize, gold:Math.random()<0.1}; }
+document.addEventListener("keydown",direction);
 function direction(e){
-
-if((e.key==="ArrowUp"||e.key==="w") && dy===0){dx=0;dy=-gridSize}
-if((e.key==="ArrowDown"||e.key==="s") && dy===0){dx=0;dy=gridSize}
-if((e.key==="ArrowLeft"||e.key==="a") && dx===0){dx=-gridSize;dy=0}
-if((e.key==="ArrowRight"||e.key==="d") && dx===0){dx=gridSize;dy=0}
-
+  if((e.key==="ArrowUp"||e.key==="w") && dy===0){dx=0;dy=-gridSize;}
+  if((e.key==="ArrowDown"||e.key==="s") && dy===0){dx=0;dy=gridSize;}
+  if((e.key==="ArrowLeft"||e.key==="a") && dx===0){dx=-gridSize;dy=0;}
+  if((e.key==="ArrowRight"||e.key==="d") && dx===0){dx=gridSize;dy=0;}
 }
-
 function mobileDir(dir){
-
-if(dir==="up" && dy===0){dx=0;dy=-gridSize}
-if(dir==="down" && dy===0){dx=0;dy=gridSize}
-if(dir==="left" && dx===0){dx=-gridSize;dy=0}
-if(dir==="right" && dx===0){dx=gridSize;dy=0}
-
+  if(dir==="up" && dy===0){dx=0;dy=-gridSize;}
+  if(dir==="down" && dy===0){dx=0;dy=gridSize;}
+  if(dir==="left" && dx===0){dx=-gridSize;dy=0;}
+  if(dir==="right" && dx===0){dx=gridSize;dy=0;}
 }
 
-let startX=0
-let startY=0
-
-canvas.addEventListener("touchstart",e=>{
-startX=e.touches[0].clientX
-startY=e.touches[0].clientY
-})
-
-canvas.addEventListener("touchend",e=>{
-
-let endX=e.changedTouches[0].clientX
-let endY=e.changedTouches[0].clientY
-
-let diffX=endX-startX
-let diffY=endY-startY
-
-if(Math.abs(diffX)>Math.abs(diffY)){
-
-if(diffX>0 && dx===0){dx=gridSize;dy=0}
-else if(diffX<0 && dx===0){dx=-gridSize;dy=0}
-
-}else{
-
-if(diffY>0 && dy===0){dx=0;dy=gridSize}
-else if(diffY<0 && dy===0){dx=0;dy=-gridSize}
-
-}
-
-})
+let startX=0, startY=0;
+canvas.addEventListener("touchstart", e=>{ startX=e.touches[0].clientX; startY=e.touches[0].clientY; });
+canvas.addEventListener("touchend", e=>{
+  let endX=e.changedTouches[0].clientX; let endY=e.changedTouches[0].clientY;
+  let diffX=endX-startX; let diffY=endY-startY;
+  if(Math.abs(diffX)>Math.abs(diffY)){
+    if(diffX>0 && dx===0){dx=gridSize;dy=0;} else if(diffX<0 && dx===0){dx=-gridSize;dy=0;}
+  } else {
+    if(diffY>0 && dy===0){dx=0;dy=gridSize;} else if(diffY<0 && dy===0){dx=0;dy=-gridSize;}
+  }
+});
 
 function loop(){
-
-let head={
-x:snake[0].x+dx,
-y:snake[0].y+dy
+  let head={x:snake[0].x+dx, y:snake[0].y+dy};
+  if(head.x<0||head.y<0||head.x>=400||head.y>=400){ gameOver(); return; }
+  for(let part of snake){ if(head.x===part.x && head.y===part.y){ gameOver(); return; } }
+  snake.unshift(head);
+  let fruitsEaten=0;
+  if(head.x===food.x && head.y===food.y){
+    if(food.gold){ score+=3; fruitsEaten=1; } else { score++; fruitsEaten=1; }
+    document.getElementById("score").innerText="Score : "+score;
+    food=randomFood();
+    if(mode=="classic"){ snakeColor=colors[Math.floor(score/10)%colors.length]; }
+    if(mode=="adventure" && score>=levelGoal){ winLevel(); return; }
+  } else { snake.pop(); }
+  ctx.fillStyle="#111"; ctx.fillRect(0,0,400,400);
+  if(food.gold){ ctx.drawImage(goldenAppleImg,food.x,food.y,gridSize,gridSize); } 
+  else { ctx.drawImage(appleImg,food.x,food.y,gridSize,gridSize); }
+  snake.forEach((p,i)=>{
+    if(i==0){ ctx.fillStyle=snakeColor; ctx.fillRect(p.x,p.y,gridSize,gridSize); ctx.drawImage(snakeHeadImg,p.x,p.y,gridSize,gridSize); } 
+    else { ctx.fillStyle=snakeColor; ctx.fillRect(p.x,p.y,gridSize,gridSize); }
+  });
+  updateUserStats(score, fruitsEaten);
 }
 
-if(head.x<0||head.y<0||head.x>=400||head.y>=400){
-gameOver()
-return
-}
-
-for(let part of snake){
-if(head.x===part.x && head.y===part.y){
-gameOver()
-return
-}
-}
-
-snake.unshift(head)
-
-if(head.x===food.x && head.y===food.y){
-
-if(food.gold){
-score+=3
-}else{
-score++
-}
-
-document.getElementById("score").innerText="Score : "+score
-
-food=randomFood()
-
-if(score>bestScore){
-bestScore=score
-localStorage.setItem("snakeBest",bestScore)
-document.getElementById("bestScore").innerText="Meilleur score : "+bestScore
-}
-
-if(mode=="classic"){
-snakeColor=colors[Math.floor(score/10)%colors.length]
-}
-
-if(mode=="adventure" && score>=levelGoal){
-winLevel()
-return
-}
-
-}else{
-snake.pop()
-}
-
-ctx.fillStyle="#111"
-ctx.fillRect(0,0,400,400)
-
-if(food.gold){
-ctx.drawImage(goldenAppleImg,food.x,food.y,gridSize,gridSize)
-}else{
-ctx.drawImage(appleImg,food.x,food.y,gridSize,gridSize)
-}
-
-snake.forEach((p,i)=>{
-if(i==0){
-
-ctx.fillStyle=snakeColor
-ctx.fillRect(p.x,p.y,gridSize,gridSize)
-
-ctx.drawImage(snakeHeadImg,p.x,p.y,gridSize,gridSize)
-
-}else{
-ctx.fillStyle=snakeColor
-ctx.fillRect(p.x,p.y,gridSize,gridSize)
-}
-})
-
-}
-
-function gameOver(){
-clearInterval(interval)
-document.getElementById("game").style.display="none"
-document.getElementById("gameover").style.display="block"
-}
-
-function winLevel(){
-clearInterval(interval)
-localStorage.setItem("level"+level,true)
-document.getElementById("game").style.display="none"
-document.getElementById("win").style.display="block"
-}
-
-function nextLevel(){
-
-level++
-
-if(level>10){
-backToMenu()
-return
-}
-
-startAdventure(level)
-
-}
-
-function restartLevel(){
-
-document.getElementById("gameover").style.display="none"
-
-if(mode=="adventure"){
-startAdventure(level)
-}else{
-startClassic()
-}
-
-}
-
-function backToMenu(){
-
-document.getElementById("game").style.display="none"
-document.getElementById("gameover").style.display="none"
-document.getElementById("win").style.display="none"
-document.getElementById("adventureMenu").style.display="none"
-
-document.getElementById("menu").style.display="block"
-
-updateAdventureUI()
-
-}
+function gameOver(){ clearInterval(interval); document.getElementById("game").style.display="none"; document.getElementById("gameover").style.display="block"; }
+function winLevel(){ clearInterval(interval); localStorage.setItem("level"+level,true); document.getElementById("game").style.display="none"; document.getElementById("win").style.display="block"; }
+function nextLevel(){ level++; if(level>10){ backToMenu(); return; } startAdventure(level); }
+function restartLevel(){ document.getElementById("gameover").style.display="none"; if(mode=="adventure"){ startAdventure(level); } else { startClassic(); } }
+function backToMenu(){ document.getElementById("game").style.display="none"; document.getElementById("gameover").style.display="none"; document.getElementById("win").style.display="none"; document.getElementById("adventureMenu").style.display="none"; document.getElementById("menu").style.display="block"; updateAdventureUI(); }
 
 </script>
-
 </body>
 </html>
