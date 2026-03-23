@@ -162,7 +162,7 @@ let dy
 let score
 let interval
 
-let gridSize = 15
+let gridSize = 20 /* FIX taille case */
 
 let mode="classic"
 
@@ -176,7 +176,7 @@ let colors=[
 "purple","red","blue","gold","white"
 ]
 
-/* IMAGES (FIX ICI) */
+/* IMAGES */
 let appleImg = new Image()
 appleImg.src = "apple.png"
 
@@ -278,23 +278,23 @@ document.addEventListener("keydown",direction)
 
 function direction(e){
 
-if((e.key==="ArrowUp"||e.key==="w") && dy==0){dx=0;dy=-gridSize}
-if((e.key==="ArrowDown"||e.key==="s") && dy==0){dx=0;dy=gridSize}
-if((e.key==="ArrowLeft"||e.key==="a") && dx==0){dx=-gridSize;dy=0}
-if((e.key==="ArrowRight"||e.key==="d") && dx==0){dx=gridSize;dy=0}
+if((e.key==="ArrowUp"||e.key==="w") && dy===0){dx=0;dy=-gridSize}
+if((e.key==="ArrowDown"||e.key==="s") && dy===0){dx=0;dy=gridSize}
+if((e.key==="ArrowLeft"||e.key==="a") && dx===0){dx=-gridSize;dy=0}
+if((e.key==="ArrowRight"||e.key==="d") && dx===0){dx=gridSize;dy=0}
 
 }
 
 function mobileDir(dir){
 
-if(dir==="up" && dy==0){dx=0;dy=-gridSize}
-if(dir==="down" && dy==0){dx=0;dy=gridSize}
-if(dir==="left" && dx==0){dx=-gridSize;dy=0}
-if(dir==="right" && dx==0){dx=gridSize;dy=0}
+if(dir==="up" && dy===0){dx=0;dy=-gridSize}
+if(dir==="down" && dy===0){dx=0;dy=gridSize}
+if(dir==="left" && dx===0){dx=-gridSize;dy=0}
+if(dir==="right" && dx===0){dx=gridSize;dy=0}
 
 }
 
-/* SWIPE */
+/* SWIPE reste pareil */
 
 let startX=0
 let startY=0
@@ -314,13 +314,13 @@ let diffY=endY-startY
 
 if(Math.abs(diffX)>Math.abs(diffY)){
 
-if(diffX>0 && dx==0){dx=gridSize;dy=0}
-else if(diffX<0 && dx==0){dx=-gridSize;dy=0}
+if(diffX>0 && dx===0){dx=gridSize;dy=0}
+else if(diffX<0 && dx===0){dx=-gridSize;dy=0}
 
 }else{
 
-if(diffY>0 && dy==0){dx=0;dy=gridSize}
-else if(diffY<0 && dy==0){dx=0;dy=-gridSize}
+if(diffY>0 && dy===0){dx=0;dy=gridSize}
+else if(diffY<0 && dy===0){dx=0;dy=-gridSize}
 
 }
 
@@ -339,7 +339,7 @@ return
 }
 
 for(let part of snake){
-if(head.x==part.x && head.y==part.y){
+if(head.x===part.x && head.y===part.y){
 gameOver()
 return
 }
@@ -347,7 +347,7 @@ return
 
 snake.unshift(head)
 
-if(head.x==food.x && head.y==food.y){
+if(head.x===food.x && head.y===food.y){
 
 if(food.gold){
 score+=3
@@ -382,21 +382,9 @@ snake.pop()
 ctx.fillStyle="#111"
 ctx.fillRect(0,0,400,400)
 
-/* GRILLE */
-ctx.strokeStyle="#222"
-for(let i=0;i<400;i+=gridSize){
-ctx.beginPath()
-ctx.moveTo(i,0)
-ctx.lineTo(i,400)
-ctx.stroke()
+/* ❌ GRILLE SUPPRIMÉE */
 
-ctx.beginPath()
-ctx.moveTo(0,i)
-ctx.lineTo(400,i)
-ctx.stroke()
-}
-
-/* POMME IMAGE */
+/* POMME */
 if(food.gold){
 ctx.drawImage(goldenAppleImg,food.x,food.y,gridSize,gridSize)
 }else{
@@ -405,14 +393,12 @@ ctx.drawImage(appleImg,food.x,food.y,gridSize,gridSize)
 
 /* SERPENT */
 snake.forEach((p,i)=>{
-
 if(i==0){
 ctx.drawImage(snakeHeadImg,p.x,p.y,gridSize,gridSize)
 }else{
 ctx.fillStyle=snakeColor
 ctx.fillRect(p.x,p.y,gridSize,gridSize)
 }
-
 })
 
 }
