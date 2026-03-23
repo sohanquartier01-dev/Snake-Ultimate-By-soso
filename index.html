@@ -162,7 +162,7 @@ let dy
 let score
 let interval
 
-let gridSize = 20 /* FIX taille case */
+let gridSize = 20
 
 let mode="classic"
 
@@ -176,7 +176,6 @@ let colors=[
 "purple","red","blue","gold","white"
 ]
 
-/* IMAGES */
 let appleImg = new Image()
 appleImg.src = "apple.png"
 
@@ -272,8 +271,6 @@ gold:Math.random()<0.1
 }
 }
 
-/* CONTROLES */
-
 document.addEventListener("keydown",direction)
 
 function direction(e){
@@ -293,8 +290,6 @@ if(dir==="left" && dx===0){dx=-gridSize;dy=0}
 if(dir==="right" && dx===0){dx=gridSize;dy=0}
 
 }
-
-/* SWIPE reste pareil */
 
 let startX=0
 let startY=0
@@ -378,23 +373,23 @@ return
 snake.pop()
 }
 
-/* FOND */
 ctx.fillStyle="#111"
 ctx.fillRect(0,0,400,400)
 
-/* ❌ GRILLE SUPPRIMÉE */
-
-/* POMME */
 if(food.gold){
 ctx.drawImage(goldenAppleImg,food.x,food.y,gridSize,gridSize)
 }else{
 ctx.drawImage(appleImg,food.x,food.y,gridSize,gridSize)
 }
 
-/* SERPENT */
 snake.forEach((p,i)=>{
 if(i==0){
+
+ctx.fillStyle=snakeColor
+ctx.fillRect(p.x,p.y,gridSize,gridSize)
+
 ctx.drawImage(snakeHeadImg,p.x,p.y,gridSize,gridSize)
+
 }else{
 ctx.fillStyle=snakeColor
 ctx.fillRect(p.x,p.y,gridSize,gridSize)
