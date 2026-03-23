@@ -181,15 +181,20 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-  // 🔹 AUTHENTIFICATION & PROFIL
+// 🔹 AUTHENTIFICATION & PROFIL
 firebase.auth().onAuthStateChanged(user => {
   if(user){
     let storedName = localStorage.getItem("snakeUsername") || "Joueur"
     document.getElementById("username").value = storedName
     document.getElementById("userEmail").innerText = "Connecté : " + (user.isAnonymous ? "Anonyme" : user.email)
     updateLeaderboard()
-  } else loginAnonyme()
+  } 
 })
+
+// 🔹 Connexion anonyme via bouton
+function loginAnonyme(){
+  firebase.auth().signInAnonymously().catch(err => console.log(err))
+}
 
 function loginAnonyme(){
   firebase.auth().signInAnonymously().catch(err => console.log(err))
