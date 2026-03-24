@@ -97,40 +97,7 @@ display:block;
 
 <body>
 
-  <!-- 🔐 AUTH -->
-<div id="auth">
-
-<h1>🐍 Snake Ultimate</h1>
-
-<input id="username" placeholder="Pseudo (3-10 caractères)">
-<br>
-<input id="password" type="password" placeholder="Mot de passe">
-<br>
-
-<button onclick="register()">Continuer</button>
-<button onclick="showLogin()">Déjà connecté</button>
-
-<p id="authMsg"></p>
-
-</div>
-
-<div id="login" style="display:none">
-
-<h1>Connexion</h1>
-
-<input id="loginUser" placeholder="Pseudo">
-<br>
-<input id="loginPass" type="password" placeholder="Mot de passe">
-<br>
-
-<button onclick="login()">Se connecter</button>
-<button onclick="showRegister()">Créer un compte</button>
-
-<p id="loginMsg"></p>
-
-</div>
-
-<div id="menu" style="display:none">
+<div id="menu">
 
 <h1 id="snakeTitle">🐍 Snake Ultimate</h1>
 
@@ -138,7 +105,6 @@ display:block;
 
 <button onclick="startClassic()">Mode Classique</button>
 <button onclick="openAdventure()">Mode aventure</button>
-<button onclick="showLeaderboard()">Classement</button>
 
 </div>
 
@@ -204,101 +170,6 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
-
-  /* SAVE DATA */
-
-async function saveData(){
-
-let doc=await db.collection("users").doc(currentUser).get()
-let data=doc.data()
-
-await db.collection("users").doc(currentUser).update({
-bestScore:Math.max(data.bestScore,score),
-fruits:data.fruits+totalFruits,
-time:data.time+Math.floor((Date.now()-startTime)/1000)
-})
-
-}
-
-
-  /* =========================
-   🔐 VARIABLES GLOBALES
-========================= */
-
-let currentUser=null
-let totalFruits=0
-let startTime=Date.now()
-
-/* =========================
-   🔐 AUTH
-========================= */
-
-function showLogin(){
-document.getElementById("auth").style.display="none"
-document.getElementById("login").style.display="block"
-}
-
-function showRegister(){
-document.getElementById("login").style.display="none"
-document.getElementById("auth").style.display="block"
-}
-
-async function register(){
-
-let user=document.getElementById("username").value
-let pass=document.getElementById("password").value
-
-if(!user||!pass){
-document.getElementById("authMsg").innerText="Remplis tout"
-return
-}
-
-if(user.length<3||user.length>10){
-document.getElementById("authMsg").innerText="Pseudo 3-10 caractères"
-return
-}
-
-let doc=await db.collection("users").doc(user).get()
-
-if(doc.exists){
-document.getElementById("authMsg").innerText="Pseudo déjà pris"
-return
-}
-
-await db.collection("users").doc(user).set({
-password:pass,
-bestScore:0,
-fruits:0,
-time:0
-})
-
-currentUser=user
-startApp()
-
-}
-
-async function login(){
-
-let user=document.getElementById("loginUser").value
-let pass=document.getElementById("loginPass").value
-
-let doc=await db.collection("users").doc(user).get()
-
-if(!doc.exists || doc.data().password!==pass){
-document.getElementById("loginMsg").innerText="Incorrect"
-return
-}
-
-currentUser=user
-startApp()
-
-}
-
-function startApp(){
-document.getElementById("auth").style.display="none"
-document.getElementById("login").style.display="none"
-document.getElementById("menu").style.display="block"
-}
 
 let canvas=document.getElementById("canvas")
 let ctx=canvas.getContext("2d")
@@ -492,8 +363,6 @@ snake.unshift(head)
 
 if(head.x===food.x && head.y===food.y){
 
-totalFruits++
-
 if(food.gold){
 score+=3
 }else{
@@ -548,7 +417,11 @@ ctx.fillRect(p.x,p.y,gridSize,gridSize)
 
 }
 
-
+function gameOver(){
+clearInterval(interval)
+document.getElementById("game").style.display="none"
+document.getElementById("gameover").style.display="block"
+}
 
 function winLevel(){
 clearInterval(interval)
@@ -584,21 +457,15 @@ startClassic()
 
 function backToMenu(){
 
+document.getElementById("game").style.display="none"
+document.getElementById("gameover").style.display="none"
 document.getElementById("win").style.display="none"
 document.getElementById("adventureMenu").style.display="none"
+
 document.getElementById("menu").style.display="block"
 
 updateAdventureUI()
-  
 
-
-/* GAME OVER FINAL */
-
-function gameOver(){
-clearInterval(interval)
-saveData()
-document.getElementById("game").style.display="none"
-document.getElementById("gameover").style.display="block"
 }
 
 </script>
