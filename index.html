@@ -2,473 +2,885 @@
 <html>
 <head>
 <title>Snake Ultimate</title>
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
 
-<!-- 🔥 FIREBASE -->
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 
 <style>
+:root{
+  --neon-green:#00ff88;
+  --neon-blue:#00c3ff;
+  --neon-pink:#ff0080;
+  --neon-gold:#ffd700;
+  --bg-dark:#060a0f;
+  --bg-card:rgba(0,255,136,0.04);
+  --border-neon:rgba(0,255,136,0.25);
+}
+
+*{box-sizing:border-box;margin:0;padding:0;}
 
 body{
-background:linear-gradient(270deg,#0f2027,#203a43,#2c5364);
-background-size:600% 600%;
-animation:bg 10s ease infinite;
-color:white;
-font-family:Arial;
-text-align:center;
-overflow:hidden;
-margin:0;
+  background:var(--bg-dark);
+  color:white;
+  font-family:'Orbitron',monospace;
+  text-align:center;
+  overflow:hidden;
+  min-height:100vh;
+  position:relative;
 }
 
-@keyframes bg{
-0%{background-position:0% 50%}
-50%{background-position:100% 50%}
-100%{background-position:0% 50%}
+/* GRILLE FOND */
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  background-image:
+    linear-gradient(rgba(0,255,136,0.03) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,255,136,0.03) 1px,transparent 1px);
+  background-size:40px 40px;
+  pointer-events:none;
+  z-index:0;
 }
 
+/* GLOW AMBIANT */
+body::after{
+  content:'';
+  position:fixed;
+  top:-200px;left:50%;
+  transform:translateX(-50%);
+  width:600px;height:600px;
+  background:radial-gradient(circle,rgba(0,255,136,0.06) 0%,transparent 70%);
+  pointer-events:none;
+  z-index:0;
+}
+
+.screen{
+  position:relative;z-index:1;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  min-height:100vh;padding:20px;
+}
+
+/* TITRE */
+.main-title{
+  font-family:'Press Start 2P',monospace;
+  font-size:clamp(20px,4vw,42px);
+  color:var(--neon-green);
+  text-shadow:0 0 20px var(--neon-green),0 0 60px rgba(0,255,136,0.4);
+  margin-bottom:8px;
+  animation:titlePulse 3s ease-in-out infinite;
+}
+
+@keyframes titlePulse{
+  0%,100%{text-shadow:0 0 20px var(--neon-green),0 0 60px rgba(0,255,136,0.4);}
+  50%{text-shadow:0 0 40px var(--neon-green),0 0 100px rgba(0,255,136,0.7),0 0 140px rgba(0,255,136,0.3);}
+}
+
+.subtitle{
+  font-size:10px;
+  color:rgba(0,255,136,0.5);
+  letter-spacing:6px;
+  margin-bottom:40px;
+  text-transform:uppercase;
+}
+
+/* CARDS */
+.card{
+  background:var(--bg-card);
+  border:1px solid var(--border-neon);
+  border-radius:12px;
+  padding:30px;
+  width:100%;max-width:380px;
+  backdrop-filter:blur(10px);
+  box-shadow:0 0 40px rgba(0,255,136,0.05),inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+/* INPUTS */
+input{
+  width:100%;
+  padding:12px 16px;
+  margin:8px 0;
+  background:rgba(0,0,0,0.4);
+  border:1px solid rgba(0,255,136,0.2);
+  border-radius:8px;
+  color:white;
+  font-family:'Orbitron',monospace;
+  font-size:13px;
+  outline:none;
+  transition:border-color 0.2s,box-shadow 0.2s;
+}
+
+input::placeholder{color:rgba(255,255,255,0.25);}
+input:focus{
+  border-color:var(--neon-green);
+  box-shadow:0 0 15px rgba(0,255,136,0.2);
+}
+
+/* BOUTONS */
+.btn{
+  padding:12px 24px;
+  font-size:12px;
+  font-family:'Orbitron',monospace;
+  font-weight:700;
+  margin:6px;
+  cursor:pointer;
+  border:none;
+  border-radius:8px;
+  transition:all 0.2s;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  position:relative;
+  overflow:hidden;
+}
+
+.btn-primary{
+  background:linear-gradient(135deg,var(--neon-green),#00a855);
+  color:#060a0f;
+  box-shadow:0 4px 20px rgba(0,255,136,0.3);
+}
+
+.btn-primary:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 30px rgba(0,255,136,0.5);
+}
+
+.btn-secondary{
+  background:transparent;
+  color:var(--neon-green);
+  border:1px solid var(--neon-green);
+  box-shadow:0 0 10px rgba(0,255,136,0.1);
+}
+
+.btn-secondary:hover{
+  background:rgba(0,255,136,0.1);
+  box-shadow:0 0 20px rgba(0,255,136,0.3);
+}
+
+.btn-danger{
+  background:linear-gradient(135deg,var(--neon-pink),#aa0055);
+  color:white;
+}
+
+.btn-gold{
+  background:linear-gradient(135deg,var(--neon-gold),#cc8800);
+  color:#060a0f;
+}
+
+/* MSG ERREUR */
+.msg{
+  font-size:11px;
+  margin-top:10px;
+  padding:8px;
+  border-radius:6px;
+  min-height:20px;
+}
+.msg.error{color:var(--neon-pink);background:rgba(255,0,128,0.08);border:1px solid rgba(255,0,128,0.2);}
+.msg.success{color:var(--neon-green);background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.2);}
+
+/* DIVIDER */
+.divider{
+  display:flex;align-items:center;gap:10px;
+  margin:16px 0;color:rgba(255,255,255,0.2);font-size:10px;
+}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.1);}
+
+/* MENU BOUTONS */
+.menu-buttons{display:flex;flex-direction:column;gap:10px;width:100%;max-width:280px;}
+
+/* SCORE HEADER */
+.score-bar{
+  display:flex;justify-content:space-between;align-items:center;
+  width:100%;max-width:440px;
+  padding:10px 16px;
+  background:rgba(0,0,0,0.5);
+  border:1px solid var(--border-neon);
+  border-radius:8px;
+  margin-bottom:12px;
+  font-size:11px;
+}
+.score-val{color:var(--neon-green);font-weight:700;font-size:16px;}
+.objective-tag{
+  font-size:9px;padding:4px 10px;
+  background:rgba(0,195,255,0.1);
+  border:1px solid rgba(0,195,255,0.3);
+  border-radius:20px;color:var(--neon-blue);
+}
+
+/* CANVAS */
 canvas{
-background:#111;
-border:4px solid white;
-margin-top:20px;
-max-width:90vw;
-max-height:60vh;
+  background:#0a0f0a;
+  border:2px solid rgba(0,255,136,0.3);
+  border-radius:8px;
+  box-shadow:0 0 30px rgba(0,255,136,0.1),0 0 60px rgba(0,255,136,0.05);
+  max-width:90vw;max-height:55vh;
+  display:block;
 }
 
-button{
-padding:12px 25px;
-font-size:18px;
-margin:10px;
-cursor:pointer;
-border:none;
-border-radius:8px;
-background:#00c3ff;
-color:white;
-transition:0.2s;
+/* MOBILE CONTROLS */
+#mobileControls{display:none;margin-top:15px;}
+#mobileControls .btn{font-size:22px;padding:12px 18px;margin:3px;}
+@media(max-width:768px){#mobileControls{display:block;}}
+
+/* ADVENTURE LEVELS */
+.levels-grid{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:8px;width:100%;max-width:380px;
+  max-height:55vh;overflow-y:auto;
+  padding-right:4px;
+}
+.levels-grid::-webkit-scrollbar{width:4px;}
+.levels-grid::-webkit-scrollbar-track{background:transparent;}
+.levels-grid::-webkit-scrollbar-thumb{background:var(--neon-green);border-radius:4px;}
+
+.level-card{
+  padding:12px;
+  background:rgba(0,0,0,0.3);
+  border:1px solid rgba(0,255,136,0.15);
+  border-radius:8px;
+  cursor:pointer;
+  transition:all 0.2s;
+  font-size:10px;
+}
+.level-card:hover{
+  border-color:var(--neon-green);
+  background:rgba(0,255,136,0.08);
+  transform:translateY(-2px);
+}
+.level-card.completed{
+  border-color:var(--neon-gold);
+  background:rgba(255,215,0,0.05);
+}
+.level-card.completed .level-num{color:var(--neon-gold);}
+.level-num{font-size:14px;font-weight:700;color:var(--neon-green);margin-bottom:4px;}
+.level-goal{color:rgba(255,255,255,0.5);font-size:9px;}
+
+/* LEADERBOARD */
+.lb-entry{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;
+  margin:4px 0;
+  border-radius:8px;
+  font-size:11px;
+  background:rgba(0,0,0,0.3);
+  border:1px solid rgba(0,255,136,0.1);
+  transition:all 0.2s;
+}
+.lb-entry:hover{background:rgba(0,255,136,0.05);}
+.lb-entry.rank-1{border-color:rgba(255,215,0,0.4);background:rgba(255,215,0,0.05);}
+.lb-entry.rank-2{border-color:rgba(192,192,192,0.4);}
+.lb-entry.rank-3{border-color:rgba(205,127,50,0.4);}
+.lb-entry.me{border-color:var(--neon-blue);background:rgba(0,195,255,0.05);}
+.lb-rank{font-size:16px;min-width:30px;}
+.lb-name{flex:1;text-align:left;margin-left:10px;}
+.lb-score{color:var(--neon-green);font-weight:700;}
+
+/* PROFIL */
+.profile-stats{
+  display:grid;grid-template-columns:1fr 1fr 1fr;
+  gap:10px;width:100%;margin:16px 0;
+}
+.stat-box{
+  padding:12px 8px;
+  background:rgba(0,0,0,0.3);
+  border:1px solid var(--border-neon);
+  border-radius:8px;
+}
+.stat-val{font-size:18px;color:var(--neon-green);font-weight:700;}
+.stat-label{font-size:8px;color:rgba(255,255,255,0.4);margin-top:4px;}
+
+.username-display{
+  font-size:20px;font-weight:700;
+  color:white;margin:8px 0;
+}
+.username-tag{
+  font-size:9px;padding:3px 10px;
+  background:rgba(0,255,136,0.1);
+  border:1px solid rgba(0,255,136,0.3);
+  border-radius:20px;color:var(--neon-green);
+  display:inline-block;margin-bottom:16px;
 }
 
-button:hover{
-transform:scale(1.1);
-background:#00ffa6;
-}
+/* GAMEOVER / WIN */
+.result-icon{font-size:60px;margin-bottom:10px;animation:bounce 0.5s ease;}
+@keyframes bounce{0%{transform:scale(0)}70%{transform:scale(1.2)}100%{transform:scale(1)}}
+.result-score{font-size:28px;color:var(--neon-green);margin:8px 0;}
+.result-sub{font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:20px;}
 
-.level{
-padding:6px;
-margin:4px;
+/* LOADING */
+#loading{
+  position:fixed;inset:0;z-index:999;
+  background:var(--bg-dark);
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:16px;
 }
+.loader{
+  width:40px;height:40px;
+  border:3px solid rgba(0,255,136,0.2);
+  border-top-color:var(--neon-green);
+  border-radius:50%;
+  animation:spin 0.8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-.completed{
-color:lime;
-font-weight:bold;
-}
-
-#snakeTitle{
-font-size:60px;
-animation:float 2s infinite alternate;
-}
-
-@keyframes float{
-from{transform:translateY(0px)}
-to{transform:translateY(-10px)}
-}
-
-#mobileControls{
-margin-top:15px;
-display:none;
-}
-
-#mobileControls button{
-font-size:28px;
-padding:15px 20px;
-margin:5px;
-}
-
-@media (max-width:768px){
-#mobileControls{
-display:block;
-}
-}
-
+/* HIDDEN */
+.hidden{display:none!important;}
 </style>
-
 </head>
 
 <body>
 
-<div id="menu">
-
-<h1 id="snakeTitle">🐍 Snake Ultimate</h1>
-
-<h2 id="bestScore">Meilleur score : 0</h2>
-
-<button onclick="startClassic()">Mode Classique</button>
-<button onclick="openAdventure()">Mode aventure</button>
-
+<!-- LOADING -->
+<div id="loading">
+  <div style="font-family:'Press Start 2P',monospace;font-size:18px;color:var(--neon-green);text-shadow:0 0 20px var(--neon-green)">🐍</div>
+  <div class="loader"></div>
+  <div style="font-size:9px;color:rgba(0,255,136,0.5);letter-spacing:3px">CHARGEMENT...</div>
 </div>
 
-<div id="adventureMenu" style="display:none">
-
-<h1>Mode aventure</h1>
-
-<div id="levels"></div>
-
-<button onclick="backToMenu()">Retour</button>
-
+<!-- AUTH - REGISTER -->
+<div id="screenAuth" class="screen hidden">
+  <div class="main-title">🐍 SNAKE</div>
+  <div class="subtitle">U L T I M A T E</div>
+  <div class="card">
+    <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:20px;letter-spacing:2px">CRÉER UN COMPTE</div>
+    <input id="regUser" placeholder="Pseudo" autocomplete="off">
+    <input id="regPass" type="password" placeholder="Mot de passe">
+    <input id="regPass2" type="password" placeholder="Confirmer le mot de passe">
+    <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="register()">Créer mon compte</button>
+    <div class="divider">ou</div>
+    <button class="btn btn-secondary" style="width:100%" onclick="showScreen('screenLogin')">J'ai déjà un compte</button>
+    <div id="regMsg" class="msg"></div>
+  </div>
 </div>
 
-<div id="game" style="display:none">
-
-<h2 id="score">Score : 0</h2>
-<p id="objective"></p>
-
-<canvas id="canvas" width="400" height="400"></canvas>
-
-<div id="mobileControls">
-
-<button onclick="mobileDir('up')">⬆️</button>
-<br>
-<button onclick="mobileDir('left')">⬅️</button>
-<button onclick="mobileDir('down')">⬇️</button>
-<button onclick="mobileDir('right')">➡️</button>
-
+<!-- AUTH - LOGIN -->
+<div id="screenLogin" class="screen hidden">
+  <div class="main-title">🐍 SNAKE</div>
+  <div class="subtitle">U L T I M A T E</div>
+  <div class="card">
+    <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:20px;letter-spacing:2px">CONNEXION</div>
+    <input id="loginUser" placeholder="Pseudo" autocomplete="off">
+    <input id="loginPass" type="password" placeholder="Mot de passe">
+    <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="login()">Se connecter</button>
+    <div class="divider">ou</div>
+    <button class="btn btn-secondary" style="width:100%" onclick="showScreen('screenAuth')">Créer un compte</button>
+    <div id="loginMsg" class="msg"></div>
+  </div>
 </div>
 
+<!-- MENU -->
+<div id="screenMenu" class="screen hidden">
+  <div class="main-title">🐍 SNAKE</div>
+  <div class="subtitle">U L T I M A T E</div>
+  <h3 id="bestScore" style="font-size:12px;color:var(--neon-gold);margin-bottom:24px;"></h3>
+  <div class="menu-buttons">
+    <button class="btn btn-primary" onclick="startClassic()">▶ Mode Classique</button>
+    <button class="btn btn-secondary" onclick="showScreen('screenAdventure');updateAdventureUI()">🗺 Mode Aventure</button>
+    <button class="btn btn-secondary" onclick="showLeaderboard()">🏆 Classement</button>
+    <button class="btn btn-secondary" onclick="showProfile()">👤 Profil</button>
+    <button class="btn btn-danger" style="margin-top:10px;font-size:10px" onclick="logout()">Déconnexion</button>
+  </div>
 </div>
 
-<div id="gameover" style="display:none">
-
-<h1>💀 Game Over</h1>
-
-<button onclick="restartLevel()">Rejouer</button>
-<button onclick="backToMenu()">Retour au lobby</button>
-
+<!-- ADVENTURE MENU -->
+<div id="screenAdventure" class="screen hidden">
+  <div class="main-title" style="font-size:clamp(14px,3vw,28px);margin-bottom:6px">MODE AVENTURE</div>
+  <div class="subtitle" style="margin-bottom:20px">CHOISIR UN NIVEAU</div>
+  <div id="levels" class="levels-grid"></div>
+  <button class="btn btn-secondary" style="margin-top:16px" onclick="showScreen('screenMenu')">← Retour</button>
 </div>
 
-<div id="win" style="display:none">
+<!-- GAME -->
+<div id="screenGame" class="screen hidden" style="padding:10px">
+  <div class="score-bar">
+    <div>
+      <div style="font-size:9px;color:rgba(255,255,255,0.4)">SCORE</div>
+      <div class="score-val" id="scoreDisplay">0</div>
+    </div>
+    <div id="objectiveTag" class="objective-tag hidden"></div>
+    <div>
+      <div style="font-size:9px;color:rgba(255,255,255,0.4)">BEST</div>
+      <div style="font-size:14px;font-weight:700;color:var(--neon-gold)" id="bestInGame">0</div>
+    </div>
+  </div>
+  <canvas id="canvas" width="400" height="400"></canvas>
+  <div id="mobileControls">
+    <div><button class="btn btn-secondary" onclick="mobileDir('up')">⬆️</button></div>
+    <div>
+      <button class="btn btn-secondary" onclick="mobileDir('left')">⬅️</button>
+      <button class="btn btn-secondary" onclick="mobileDir('down')">⬇️</button>
+      <button class="btn btn-secondary" onclick="mobileDir('right')">➡️</button>
+    </div>
+  </div>
+</div>
 
-<h1>🏆 Niveau terminé</h1>
+<!-- GAME OVER -->
+<div id="screenGameover" class="screen hidden">
+  <div class="result-icon">💀</div>
+  <div style="font-family:'Press Start 2P',monospace;font-size:18px;color:var(--neon-pink);margin-bottom:8px">GAME OVER</div>
+  <div class="result-score" id="goScore"></div>
+  <div class="result-sub" id="goSub"></div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+    <button class="btn btn-primary" onclick="restartLevel()">↺ Rejouer</button>
+    <button class="btn btn-secondary" onclick="showScreen('screenMenu')">⌂ Menu</button>
+  </div>
+</div>
 
-<button onclick="nextLevel()">Niveau suivant</button>
-<button onclick="backToMenu()">Retour au lobby</button>
+<!-- WIN -->
+<div id="screenWin" class="screen hidden">
+  <div class="result-icon">🏆</div>
+  <div style="font-family:'Press Start 2P',monospace;font-size:16px;color:var(--neon-gold);margin-bottom:8px">NIVEAU TERMINÉ !</div>
+  <div class="result-score" id="winScore"></div>
+  <div class="result-sub" id="winSub"></div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+    <button class="btn btn-gold" onclick="nextLevel()">Niveau suivant →</button>
+    <button class="btn btn-secondary" onclick="showScreen('screenMenu')">⌂ Menu</button>
+  </div>
+</div>
 
+<!-- LEADERBOARD -->
+<div id="screenLeaderboard" class="screen hidden">
+  <div class="main-title" style="font-size:clamp(14px,3vw,24px);margin-bottom:6px">🏆 CLASSEMENT</div>
+  <div class="subtitle" style="margin-bottom:20px">TOP 10 MONDIAL</div>
+  <div id="leaderboardList" style="width:100%;max-width:380px;max-height:55vh;overflow-y:auto"></div>
+  <button class="btn btn-secondary" style="margin-top:16px" onclick="showScreen('screenMenu')">← Retour</button>
+</div>
+
+<!-- PROFIL -->
+<div id="screenProfile" class="screen hidden">
+  <div class="main-title" style="font-size:clamp(14px,3vw,24px);margin-bottom:6px">👤 PROFIL</div>
+  <div class="card" style="max-width:360px">
+    <div class="username-display" id="profileName"></div>
+    <div class="username-tag">JOUEUR</div>
+    <div class="profile-stats">
+      <div class="stat-box">
+        <div class="stat-val" id="profileBest">0</div>
+        <div class="stat-label">BEST SCORE</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="profileFruits">0</div>
+        <div class="stat-label">FRUITS</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="profileLevels">0</div>
+        <div class="stat-label">NIVEAUX</div>
+      </div>
+    </div>
+    <div id="profileRank" style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:16px"></div>
+  </div>
+  <button class="btn btn-secondary" style="margin-top:16px" onclick="showScreen('screenMenu')">← Retour</button>
 </div>
 
 <script>
 
-<!-- 🔥 FIREBASE CONFIG -->
+/* ===== FIREBASE CONFIG ===== */
 const firebaseConfig = {
   apiKey: "AIzaSyDdzcbtAwYXDPfM1RAOk3YzzDfRoQcomFQ",
   authDomain: "snake-ultimate-by-soso.firebaseapp.com",
   projectId: "snake-ultimate-by-soso",
   storageBucket: "snake-ultimate-by-soso.firebasestorage.app",
   messagingSenderId: "342621367023",
-  appId: "1:342621367023:web:bd16283003ce63584ec91a",
-  measurementId: "G-TEY5K15SYE"
+  appId: "1:342621367023:web:bd16283003ce63584ec91a"
 };
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-let canvas=document.getElementById("canvas")
-let ctx=canvas.getContext("2d")
+/* ===== STATE ===== */
+let currentUser = null
+let userData = null
+let sessionFruits = 0
+let sessionStart = Date.now()
 
-let snake
-let food
-let dx
-let dy
-let score
-let interval
+let canvas = document.getElementById("canvas")
+let ctx = canvas.getContext("2d")
 
+let snake, food, dx, dy, score, interval
 let gridSize = 20
+let mode = "classic"
+let level = 1
+let levelGoal = 10
+let snakeColor = "lime"
 
-let mode="classic"
+let colors = ["lime","cyan","orange","yellow","pink","purple","red","#00c3ff","gold","white"]
 
-let level=1
-let levelGoal=10
+let appleImg = new Image(); appleImg.src = "apple.png"
+let goldenAppleImg = new Image(); goldenAppleImg.src = "golden_apple.png"
+let snakeHeadImg = new Image(); snakeHeadImg.src = "snake_head.png"
 
-let snakeColor="lime"
+/* ===== NAVIGATION ===== */
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'))
+  document.getElementById(id).classList.remove('hidden')
+}
 
-let colors=[
-"lime","cyan","orange","yellow","pink",
-"purple","red","blue","gold","white"
-]
+/* ===== AUTH ===== */
+async function register(){
+  let user = document.getElementById("regUser").value.trim()
+  let pass = document.getElementById("regPass").value
+  let pass2 = document.getElementById("regPass2").value
+  let msg = document.getElementById("regMsg")
 
-let appleImg = new Image()
-appleImg.src = "apple.png"
+  if(!user || user.length < 3){ setMsg("regMsg","Pseudo trop court (min 3 caractères)","error"); return }
+  if(pass.length < 4){ setMsg("regMsg","Mot de passe trop court (min 4 caractères)","error"); return }
+  if(pass !== pass2){ setMsg("regMsg","Les mots de passe ne correspondent pas","error"); return }
+  if(/[^a-zA-Z0-9_-]/.test(user)){ setMsg("regMsg","Pseudo invalide (lettres, chiffres, _ - seulement)","error"); return }
 
-let goldenAppleImg = new Image()
-goldenAppleImg.src = "golden_apple.png"
+  try{
+    setMsg("regMsg","Vérification...","")
+    let doc = await db.collection("users").doc(user).get()
+    if(doc.exists){ setMsg("regMsg","Ce pseudo est déjà pris","error"); return }
 
-let snakeHeadImg = new Image()
-snakeHeadImg.src = "snake_head.png"
+    await db.collection("users").doc(user).set({
+      password: pass,
+      bestScore: 0,
+      totalFruits: 0,
+      levelsCompleted: 0,
+      createdAt: Date.now()
+    })
 
-let bestScore=localStorage.getItem("snakeBest")||0
-document.getElementById("bestScore").innerText="Meilleur score : "+bestScore
+    currentUser = user
+    await loadUserData()
+    startApp()
+  }catch(e){
+    setMsg("regMsg","Erreur : "+e.message,"error")
+  }
+}
 
+async function login(){
+  let user = document.getElementById("loginUser").value.trim()
+  let pass = document.getElementById("loginPass").value
+  let msg = document.getElementById("loginMsg")
+
+  if(!user || !pass){ setMsg("loginMsg","Remplis tous les champs","error"); return }
+
+  try{
+    setMsg("loginMsg","Connexion...","")
+    let doc = await db.collection("users").doc(user).get()
+    if(!doc.exists || doc.data().password !== pass){
+      setMsg("loginMsg","Pseudo ou mot de passe incorrect","error"); return
+    }
+
+    currentUser = user
+    userData = doc.data()
+    startApp()
+  }catch(e){
+    setMsg("loginMsg","Erreur : "+e.message,"error")
+  }
+}
+
+function logout(){
+  currentUser = null
+  userData = null
+  showScreen('screenAuth')
+}
+
+function setMsg(id, text, type){
+  let el = document.getElementById(id)
+  el.textContent = text
+  el.className = "msg " + type
+}
+
+/* ===== DONNÉES USER ===== */
+async function loadUserData(){
+  if(!currentUser) return
+  let doc = await db.collection("users").doc(currentUser).get()
+  userData = doc.data()
+}
+
+async function saveData(){
+  if(!currentUser || !userData) return
+  try{
+    let doc = await db.collection("users").doc(currentUser).get()
+    let d = doc.data()
+    let levelsNow = countCompletedLevels()
+
+    await db.collection("users").doc(currentUser).update({
+      bestScore: Math.max(d.bestScore, score),
+      totalFruits: d.totalFruits + sessionFruits,
+      levelsCompleted: Math.max(d.levelsCompleted || 0, levelsNow)
+    })
+    await loadUserData()
+  }catch(e){ console.error("saveData:", e) }
+}
+
+function countCompletedLevels(){
+  let count = 0
+  for(let i=1;i<=10;i++){ if(localStorage.getItem("level"+i)) count++ }
+  return count
+}
+
+/* ===== START APP ===== */
+function startApp(){
+  sessionFruits = 0
+  sessionStart = Date.now()
+  updateBestScoreDisplay()
+  showScreen('screenMenu')
+}
+
+function updateBestScoreDisplay(){
+  let best = userData ? userData.bestScore : 0
+  document.getElementById("bestScore").innerText = "🏆 Meilleur score : " + best
+  document.getElementById("bestInGame").innerText = best
+}
+
+/* ===== MENU AVENTURE ===== */
+function updateAdventureUI(){
+  let container = document.getElementById("levels")
+  container.innerHTML = ""
+  for(let i=1;i<=10;i++){
+    let div = document.createElement("div")
+    div.className = "level-card"
+    if(localStorage.getItem("level"+i)) div.classList.add("completed")
+    div.innerHTML = `<div class="level-num">${localStorage.getItem("level"+i)?"✅":"🔹"} Niveau ${i}</div><div class="level-goal">Objectif : ${i*10} pts</div>`
+    div.onclick = () => startAdventure(i)
+    container.appendChild(div)
+  }
+}
+
+/* ===== JEU ===== */
 function startClassic(){
-mode="classic"
-startGame()
+  mode = "classic"
+  startGame()
 }
 
 function openAdventure(){
-document.getElementById("menu").style.display="none"
-document.getElementById("adventureMenu").style.display="block"
-updateAdventureUI()
-}
-
-function updateAdventureUI(){
-
-let container=document.getElementById("levels")
-container.innerHTML=""
-
-for(let i=1;i<=10;i++){
-
-let div=document.createElement("div")
-div.className="level"
-
-let goal=i*10
-
-if(localStorage.getItem("level"+i)){
-div.classList.add("completed")
-}
-
-div.innerText="Niveau "+i+" - Score requis : "+goal
-div.onclick=()=>startAdventure(i)
-
-container.appendChild(div)
-
-}
-
+  showScreen('screenAdventure')
+  updateAdventureUI()
 }
 
 function startAdventure(lvl){
-
-mode="adventure"
-level=lvl
-levelGoal=lvl*10
-snakeColor=colors[lvl-1]
-
-startGame()
-
+  mode = "adventure"
+  level = lvl
+  levelGoal = lvl * 10
+  snakeColor = colors[lvl-1]
+  startGame()
 }
 
 function startGame(){
+  sessionFruits = 0
+  showScreen('screenGame')
 
-document.getElementById("menu").style.display="none"
-document.getElementById("adventureMenu").style.display="none"
-document.getElementById("gameover").style.display="none"
-document.getElementById("win").style.display="none"
+  let obj = document.getElementById("objectiveTag")
+  if(mode === "adventure"){
+    obj.textContent = "NIVEAU "+level+" | OBJECTIF "+levelGoal
+    obj.classList.remove("hidden")
+  } else {
+    obj.classList.add("hidden")
+  }
 
-document.getElementById("game").style.display="block"
+  snake = [{x:200,y:200}]
+  food = randomFood()
+  dx = gridSize; dy = 0; score = 0
 
-snake=[{x:200,y:200}]
-food=randomFood()
+  document.getElementById("scoreDisplay").innerText = "0"
 
-dx=gridSize
-dy=0
-score=0
-
-document.getElementById("score").innerText="Score : 0"
-
-if(mode=="adventure"){
-document.getElementById("objective").innerText="Niveau "+level+" | Objectif : "+levelGoal
-}else{
-document.getElementById("objective").innerText=""
-}
-
-interval=setInterval(loop,130)
-
+  clearInterval(interval)
+  interval = setInterval(loop, 130)
 }
 
 function randomFood(){
-return{
-x:Math.floor(Math.random()*(400/gridSize))*gridSize,
-y:Math.floor(Math.random()*(400/gridSize))*gridSize,
-gold:Math.random()<0.1
-}
+  return{
+    x: Math.floor(Math.random()*(400/gridSize))*gridSize,
+    y: Math.floor(Math.random()*(400/gridSize))*gridSize,
+    gold: Math.random() < 0.1
+  }
 }
 
-document.addEventListener("keydown",direction)
+document.addEventListener("keydown", direction)
 
 function direction(e){
-
-if((e.key==="ArrowUp"||e.key==="w") && dy===0){dx=0;dy=-gridSize}
-if((e.key==="ArrowDown"||e.key==="s") && dy===0){dx=0;dy=gridSize}
-if((e.key==="ArrowLeft"||e.key==="a") && dx===0){dx=-gridSize;dy=0}
-if((e.key==="ArrowRight"||e.key==="d") && dx===0){dx=gridSize;dy=0}
-
+  if((e.key==="ArrowUp"||e.key==="w") && dy===0){dx=0;dy=-gridSize}
+  if((e.key==="ArrowDown"||e.key==="s") && dy===0){dx=0;dy=gridSize}
+  if((e.key==="ArrowLeft"||e.key==="a") && dx===0){dx=-gridSize;dy=0}
+  if((e.key==="ArrowRight"||e.key==="d") && dx===0){dx=gridSize;dy=0}
 }
 
 function mobileDir(dir){
-
-if(dir==="up" && dy===0){dx=0;dy=-gridSize}
-if(dir==="down" && dy===0){dx=0;dy=gridSize}
-if(dir==="left" && dx===0){dx=-gridSize;dy=0}
-if(dir==="right" && dx===0){dx=gridSize;dy=0}
-
+  if(dir==="up" && dy===0){dx=0;dy=-gridSize}
+  if(dir==="down" && dy===0){dx=0;dy=gridSize}
+  if(dir==="left" && dx===0){dx=-gridSize;dy=0}
+  if(dir==="right" && dx===0){dx=gridSize;dy=0}
 }
 
-let startX=0
-let startY=0
-
-canvas.addEventListener("touchstart",e=>{
-startX=e.touches[0].clientX
-startY=e.touches[0].clientY
-})
-
-canvas.addEventListener("touchend",e=>{
-
-let endX=e.changedTouches[0].clientX
-let endY=e.changedTouches[0].clientY
-
-let diffX=endX-startX
-let diffY=endY-startY
-
-if(Math.abs(diffX)>Math.abs(diffY)){
-
-if(diffX>0 && dx===0){dx=gridSize;dy=0}
-else if(diffX<0 && dx===0){dx=-gridSize;dy=0}
-
-}else{
-
-if(diffY>0 && dy===0){dx=0;dy=gridSize}
-else if(diffY<0 && dy===0){dx=0;dy=-gridSize}
-
-}
-
-})
+let startX=0, startY=0
+canvas.addEventListener("touchstart", e=>{startX=e.touches[0].clientX;startY=e.touches[0].clientY},{passive:true})
+canvas.addEventListener("touchend", e=>{
+  let diffX = e.changedTouches[0].clientX - startX
+  let diffY = e.changedTouches[0].clientY - startY
+  if(Math.abs(diffX)>Math.abs(diffY)){
+    if(diffX>0 && dx===0){dx=gridSize;dy=0}
+    else if(diffX<0 && dx===0){dx=-gridSize;dy=0}
+  }else{
+    if(diffY>0 && dy===0){dx=0;dy=gridSize}
+    else if(diffY<0 && dy===0){dx=0;dy=-gridSize}
+  }
+},{passive:true})
 
 function loop(){
+  let head = {x:snake[0].x+dx, y:snake[0].y+dy}
 
-let head={
-x:snake[0].x+dx,
-y:snake[0].y+dy
+  if(head.x<0||head.y<0||head.x>=400||head.y>=400){gameOver();return}
+  for(let part of snake){
+    if(head.x===part.x && head.y===part.y){gameOver();return}
+  }
+
+  snake.unshift(head)
+
+  if(head.x===food.x && head.y===food.y){
+    let pts = food.gold ? 3 : 1
+    score += pts
+    sessionFruits += pts
+
+    document.getElementById("scoreDisplay").innerText = score
+
+    let best = userData ? userData.bestScore : 0
+    if(score > best){
+      document.getElementById("bestInGame").innerText = score
+    }
+
+    food = randomFood()
+
+    if(mode==="classic"){
+      snakeColor = colors[Math.floor(score/10)%colors.length]
+    }
+
+    if(mode==="adventure" && score>=levelGoal){
+      winLevel(); return
+    }
+  }else{
+    snake.pop()
+  }
+
+  // Dessin
+  ctx.fillStyle="#0a0f0a"
+  ctx.fillRect(0,0,400,400)
+
+  // Grille discrète
+  ctx.strokeStyle = "rgba(0,255,136,0.03)"
+  ctx.lineWidth = 1
+  for(let x=0;x<400;x+=gridSize){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,400);ctx.stroke()}
+  for(let y=0;y<400;y+=gridSize){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(400,y);ctx.stroke()}
+
+  // Nourriture
+  if(food.gold){
+    try{ctx.drawImage(goldenAppleImg,food.x,food.y,gridSize,gridSize)}catch{
+      ctx.fillStyle="gold";ctx.fillRect(food.x,food.y,gridSize,gridSize)
+    }
+  }else{
+    try{ctx.drawImage(appleImg,food.x,food.y,gridSize,gridSize)}catch{
+      ctx.fillStyle="#ff4444";ctx.fillRect(food.x,food.y,gridSize,gridSize)
+    }
+  }
+
+  // Serpent
+  snake.forEach((p,i)=>{
+    if(i===0){
+      ctx.fillStyle = snakeColor
+      ctx.fillRect(p.x,p.y,gridSize,gridSize)
+      try{ctx.drawImage(snakeHeadImg,p.x,p.y,gridSize,gridSize)}catch{}
+    }else{
+      // Corps avec effet de dégradé
+      let alpha = Math.max(0.4, 1 - i/snake.length * 0.6)
+      ctx.globalAlpha = alpha
+      ctx.fillStyle = snakeColor
+      ctx.fillRect(p.x+1,p.y+1,gridSize-2,gridSize-2)
+      ctx.globalAlpha = 1
+    }
+  })
 }
 
-if(head.x<0||head.y<0||head.x>=400||head.y>=400){
-gameOver()
-return
+async function gameOver(){
+  clearInterval(interval)
+  await saveData()
+  let best = userData ? userData.bestScore : 0
+  document.getElementById("goScore").innerText = "Score : " + score
+  document.getElementById("goSub").innerText = score >= best ? "🎉 Nouveau record !" : "Meilleur : " + best
+  showScreen('screenGameover')
 }
 
-for(let part of snake){
-if(head.x===part.x && head.y===part.y){
-gameOver()
-return
-}
-}
-
-snake.unshift(head)
-
-if(head.x===food.x && head.y===food.y){
-
-if(food.gold){
-score+=3
-}else{
-score++
-}
-
-document.getElementById("score").innerText="Score : "+score
-
-food=randomFood()
-
-if(score>bestScore){
-bestScore=score
-localStorage.setItem("snakeBest",bestScore)
-document.getElementById("bestScore").innerText="Meilleur score : "+bestScore
-}
-
-if(mode=="classic"){
-snakeColor=colors[Math.floor(score/10)%colors.length]
-}
-
-if(mode=="adventure" && score>=levelGoal){
-winLevel()
-return
-}
-
-}else{
-snake.pop()
-}
-
-ctx.fillStyle="#111"
-ctx.fillRect(0,0,400,400)
-
-if(food.gold){
-ctx.drawImage(goldenAppleImg,food.x,food.y,gridSize,gridSize)
-}else{
-ctx.drawImage(appleImg,food.x,food.y,gridSize,gridSize)
-}
-
-snake.forEach((p,i)=>{
-if(i==0){
-
-ctx.fillStyle=snakeColor
-ctx.fillRect(p.x,p.y,gridSize,gridSize)
-
-ctx.drawImage(snakeHeadImg,p.x,p.y,gridSize,gridSize)
-
-}else{
-ctx.fillStyle=snakeColor
-ctx.fillRect(p.x,p.y,gridSize,gridSize)
-}
-})
-
-}
-
-function gameOver(){
-clearInterval(interval)
-document.getElementById("game").style.display="none"
-document.getElementById("gameover").style.display="block"
-}
-
-function winLevel(){
-clearInterval(interval)
-localStorage.setItem("level"+level,true)
-document.getElementById("game").style.display="none"
-document.getElementById("win").style.display="block"
+async function winLevel(){
+  clearInterval(interval)
+  localStorage.setItem("level"+level, true)
+  await saveData()
+  document.getElementById("winScore").innerText = "Score : " + score
+  document.getElementById("winSub").innerText = "Niveau " + level + " complété !"
+  showScreen('screenWin')
 }
 
 function nextLevel(){
-
-level++
-
-if(level>10){
-backToMenu()
-return
-}
-
-startAdventure(level)
-
+  level++
+  if(level>10){showScreen('screenMenu');return}
+  startAdventure(level)
 }
 
 function restartLevel(){
-
-document.getElementById("gameover").style.display="none"
-
-if(mode=="adventure"){
-startAdventure(level)
-}else{
-startClassic()
+  if(mode==="adventure") startAdventure(level)
+  else startClassic()
 }
 
+/* ===== LEADERBOARD ===== */
+async function showLeaderboard(){
+  showScreen('screenLeaderboard')
+  let list = document.getElementById("leaderboardList")
+  list.innerHTML = '<div style="font-size:10px;color:rgba(255,255,255,0.4)">Chargement...</div>'
+
+  try{
+    let snap = await db.collection("users").orderBy("bestScore","desc").limit(10).get()
+    list.innerHTML = ""
+    let rank = 1
+    let medals = ["🥇","🥈","🥉"]
+
+    snap.forEach(doc=>{
+      let d = doc.data()
+      let div = document.createElement("div")
+      div.className = "lb-entry" + (rank<=3?" rank-"+rank:"") + (doc.id===currentUser?" me":"")
+      div.innerHTML = `
+        <div class="lb-rank">${medals[rank-1]||rank}</div>
+        <div class="lb-name">${doc.id}${doc.id===currentUser?' <span style="font-size:8px;color:var(--neon-blue)">(moi)</span>':''}</div>
+        <div class="lb-score">${d.bestScore}</div>
+      `
+      list.appendChild(div)
+      rank++
+    })
+
+    if(snap.empty){
+      list.innerHTML = '<div style="font-size:10px;color:rgba(255,255,255,0.3)">Aucun score enregistré</div>'
+    }
+  }catch(e){
+    list.innerHTML = '<div style="color:var(--neon-pink);font-size:10px">Erreur de chargement</div>'
+  }
 }
 
-function backToMenu(){
+/* ===== PROFIL ===== */
+async function showProfile(){
+  showScreen('screenProfile')
+  if(!userData) await loadUserData()
 
-document.getElementById("game").style.display="none"
-document.getElementById("gameover").style.display="none"
-document.getElementById("win").style.display="none"
-document.getElementById("adventureMenu").style.display="none"
+  document.getElementById("profileName").innerText = currentUser
+  document.getElementById("profileBest").innerText = userData.bestScore || 0
+  document.getElementById("profileFruits").innerText = userData.totalFruits || 0
+  document.getElementById("profileLevels").innerText = userData.levelsCompleted || 0
 
-document.getElementById("menu").style.display="block"
-
-updateAdventureUI()
-
+  // Rang dans le classement
+  try{
+    let snap = await db.collection("users").orderBy("bestScore","desc").get()
+    let rank = 1
+    snap.forEach(doc=>{ if(doc.id===currentUser) return; if(doc.data().bestScore > (userData.bestScore||0)) rank++ })
+    document.getElementById("profileRank").innerText = "Classement mondial : #" + rank
+  }catch{}
 }
+
+/* ===== INIT ===== */
+window.addEventListener("load", ()=>{
+  setTimeout(()=>{
+    document.getElementById("loading").classList.add("hidden")
+    showScreen("screenAuth")
+  }, 1000)
+})
 
 </script>
-
 </body>
 </html>
