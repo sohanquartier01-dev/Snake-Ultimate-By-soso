@@ -10,7 +10,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <style>
-/* TON STYLE ORIGINAL (inchangé) */
 body{
 background:linear-gradient(270deg,#0f2027,#203a43,#2c5364);
 background-size:600% 600%;
@@ -30,8 +29,6 @@ canvas{
 background:#111;
 border:4px solid white;
 margin-top:20px;
-max-width:90vw;
-max-height:60vh;
 }
 button{
 padding:12px 25px;
@@ -53,12 +50,10 @@ color:white;
 <h1>🐍 Snake Ultimate</h1>
 
 <p>Pseudo 1-12 caractères</p>
-<input id="username">
-<br>
+<input id="username"><br>
 
 <p>Mot de passe 1-50 caractères</p>
-<input id="password" type="password">
-<br>
+<input id="password" type="password"><br>
 
 <button onclick="register()">Créer compte</button>
 <button onclick="showLogin()">Se connecter</button>
@@ -70,10 +65,8 @@ color:white;
 <div id="login" style="display:none">
 <h1>Connexion</h1>
 
-<input id="loginUser">
-<br>
-<input id="loginPass" type="password">
-<br>
+<input id="loginUser"><br>
+<input id="loginPass" type="password"><br>
 
 <button onclick="login()">Connexion</button>
 <button onclick="showRegister()">Retour</button>
@@ -84,11 +77,9 @@ color:white;
 <!-- MENU -->
 <div id="menu" style="display:none">
 <h1>🐍 Snake Ultimate</h1>
-
 <h2 id="bestScore">Meilleur score : 0</h2>
 
 <button onclick="startClassic()">Mode Classique</button>
-<button onclick="openAdventure()">Mode aventure</button>
 <button onclick="showLeaderboard()">Classement</button>
 <button onclick="showProfile()">Profil</button>
 </div>
@@ -96,7 +87,6 @@ color:white;
 <!-- PROFIL -->
 <div id="profile" style="display:none">
 <h1>👤 Profil</h1>
-
 <p id="profileName"></p>
 <p id="profileStats"></p>
 
@@ -110,218 +100,132 @@ color:white;
 <div id="leaderboardList"></div>
 <button onclick="backToMenu()">Retour</button>
 </div>
-<script>
 
-/* FIREBASE */
-const firebaseConfig = {
-apiKey: "AIzaSyDdzcbtAwYXDPfM1RAOk3YzzDfRoQcomFQ",
-authDomain: "snake-ultimate-by-soso.firebaseapp.com",
-projectId: "snake-ultimate-by-soso"
-};
+<!-- GAME -->
+<div id="game" style="display:none">
+<h2 id="score">Score : 0</h2>
+<canvas id="canvas" width="400" height="400"></canvas>
+</div>
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+<!-- GAME OVER -->
+<div id="gameover" style="display:none">
+<h1>💀 Game Over</h1>
+<button onclick="restartLevel()">Rejouer</button>
+<button onclick="backToMenu()">Menu</button>
+</div>
 
-/* VARIABLES */
-let currentUser=null
-let totalFruits=0
-let startTime=Date.now()
+  <!DOCTYPE html>
+<html>
+<head>
+<title>Snake Ultimate</title>
 
-/* AUTH */
-function showLogin(){
-auth.style.display="none"
-login.style.display="block"
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<style>
+body{
+background:linear-gradient(270deg,#0f2027,#203a43,#2c5364);
+background-size:600% 600%;
+animation:bg 10s ease infinite;
+color:white;
+font-family:Arial;
+text-align:center;
+overflow:hidden;
+margin:0;
 }
-
-function showRegister(){
-login.style.display="none"
-auth.style.display="block"
+@keyframes bg{
+0%{background-position:0% 50%}
+50%{background-position:100% 50%}
+100%{background-position:0% 50%}
 }
-
-async function register(){
-let user=username.value
-let pass=password.value
-
-if(user.length<1||user.length>12){
-authMsg.innerText="Pseudo invalide"
-return
+canvas{
+background:#111;
+border:4px solid white;
+margin-top:20px;
 }
-
-if(pass.length<1||pass.length>50){
-authMsg.innerText="Mot de passe invalide"
-return
+button{
+padding:12px 25px;
+font-size:18px;
+margin:10px;
+cursor:pointer;
+border:none;
+border-radius:8px;
+background:#00c3ff;
+color:white;
 }
+</style>
+</head>
 
-let doc=await db.collection("users").doc(user).get()
+<body>
 
-if(doc.exists){
-authMsg.innerText="Pseudo déjà pris"
-return
-}
+<!-- AUTH -->
+<div id="auth">
+<h1>🐍 Snake Ultimate</h1>
 
-await db.collection("users").doc(user).set({
-password:pass,
-bestScore:0,
-fruits:0,
-time:0
-})
+<p>Pseudo 1-12 caractères</p>
+<input id="username"><br>
 
-currentUser=user
-startApp()
-}
+<p>Mot de passe 1-50 caractères</p>
+<input id="password" type="password"><br>
 
-async function login(){
-let user=loginUser.value
-let pass=loginPass.value
+<button onclick="register()">Créer compte</button>
+<button onclick="showLogin()">Se connecter</button>
 
-let doc=await db.collection("users").doc(user).get()
+<p id="authMsg"></p>
+</div>
 
-if(!doc.exists||doc.data().password!==pass){
-loginMsg.innerText="Incorrect"
-return
-}
+<!-- LOGIN -->
+<div id="login" style="display:none">
+<h1>Connexion</h1>
 
-currentUser=user
-startApp()
-}
+<input id="loginUser"><br>
+<input id="loginPass" type="password"><br>
 
-/* START APP (FIX écran blanc) */
-function startApp(){
-auth.style.display="none"
-login.style.display="none"
-menu.style.display="block"
-}
+<button onclick="login()">Connexion</button>
+<button onclick="showRegister()">Retour</button>
 
-/* LOGOUT */
-function logout(){
-currentUser=null
-menu.style.display="none"
-profile.style.display="none"
-auth.style.display="block"
-}
+<p id="loginMsg"></p>
+</div>
 
-/* SAVE */
-async function saveData(){
-if(!currentUser)return
+<!-- MENU -->
+<div id="menu" style="display:none">
+<h1>🐍 Snake Ultimate</h1>
+<h2 id="bestScore">Meilleur score : 0</h2>
 
-let doc=await db.collection("users").doc(currentUser).get()
-let d=doc.data()
+<button onclick="startClassic()">Mode Classique</button>
+<button onclick="showLeaderboard()">Classement</button>
+<button onclick="showProfile()">Profil</button>
+</div>
 
-await db.collection("users").doc(currentUser).update({
-bestScore:Math.max(d.bestScore,score),
-fruits:d.fruits+totalFruits,
-time:d.time+Math.floor((Date.now()-startTime)/1000)
-})
-}
+<!-- PROFIL -->
+<div id="profile" style="display:none">
+<h1>👤 Profil</h1>
+<p id="profileName"></p>
+<p id="profileStats"></p>
 
-/* PROFIL */
-async function showProfile(){
-menu.style.display="none"
-profile.style.display="block"
+<button onclick="logout()">Se déconnecter</button>
+<button onclick="backToMenu()">Retour</button>
+</div>
 
-let doc=await db.collection("users").doc(currentUser).get()
-let d=doc.data()
+<!-- LEADERBOARD -->
+<div id="leaderboard" style="display:none">
+<h1>🌍 Classement</h1>
+<div id="leaderboardList"></div>
+<button onclick="backToMenu()">Retour</button>
+</div>
 
-profileName.innerText="Pseudo : "+currentUser
-profileStats.innerText=
-"Score max : "+d.bestScore+
-" | Fruits : "+d.fruits+
-" | Temps : "+d.time+"s"
-}
+<!-- GAME -->
+<div id="game" style="display:none">
+<h2 id="score">Score : 0</h2>
+<canvas id="canvas" width="400" height="400"></canvas>
+</div>
 
-/* LEADERBOARD */
-async function showLeaderboard(){
-menu.style.display="none"
-leaderboard.style.display="block"
-
-let snap=await db.collection("users")
-.orderBy("bestScore","desc")
-.limit(10)
-.get()
-
-leaderboardList.innerHTML=""
-snap.forEach(doc=>{
-let d=doc.data()
-leaderboardList.innerHTML+=`<p>${doc.id} - ${d.bestScore}</p>`
-})
-}
-
-/* ================= TON JEU (100% INTACT) ================= */
-
-let canvas=document.getElementById("canvas")
-let ctx=canvas.getContext("2d")
-
-let snake,food,dx,dy,score,interval
-let gridSize=20
-
-function startClassic(){
-startGame()
-}
-
-function startGame(){
-menu.style.display="none"
-game.style.display="block"
-
-snake=[{x:200,y:200}]
-food={x:100,y:100}
-dx=20;dy=0;score=0
-
-interval=setInterval(loop,130)
-}
-
-document.addEventListener("keydown",e=>{
-if(e.key==="ArrowUp"){dx=0;dy=-20}
-if(e.key==="ArrowDown"){dx=0;dy=20}
-if(e.key==="ArrowLeft"){dx=-20;dy=0}
-if(e.key==="ArrowRight"){dx=20;dy=0}
-})
-
-function loop(){
-let head={x:snake[0].x+dx,y:snake[0].y+dy}
-
-if(head.x<0||head.y<0||head.x>=400||head.y>=400){
-gameOver();return
-}
-
-snake.unshift(head)
-
-if(head.x===food.x&&head.y===food.y){
-score++
-food={x:Math.floor(Math.random()*20)*20,y:Math.floor(Math.random()*20)*20}
-}else{
-snake.pop()
-}
-
-ctx.fillStyle="#111"
-ctx.fillRect(0,0,400,400)
-
-snake.forEach(p=>{
-ctx.fillStyle="lime"
-ctx.fillRect(p.x,p.y,20,20)
-})
-}
-
-function gameOver(){
-clearInterval(interval)
-saveData()
-game.style.display="none"
-gameover.style.display="block"
-}
-
-function restartLevel(){
-gameover.style.display="none"
-startGame()
-}
-
-function backToMenu(){
-leaderboard.style.display="none"
-profile.style.display="none"
-gameover.style.display="none"
-game.style.display="none"
-menu.style.display="block"
-}
-
-</script>
-
-</body>
-</html>
+<!-- GAME OVER -->
+<div id="gameover" style="display:none">
+<h1>💀 Game Over</h1>
+<button onclick="restartLevel()">Rejouer</button>
+<button onclick="backToMenu()">Menu</button>
+</div>
