@@ -5,12 +5,13 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- FIREBASE -->
+<!-- 🔥 FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 
 <style>
-/* TON STYLE ORIGINAL (100% intact) */
+
 body{
 background:linear-gradient(270deg,#0f2027,#203a43,#2c5364);
 background-size:600% 600%;
@@ -21,11 +22,13 @@ text-align:center;
 overflow:hidden;
 margin:0;
 }
+
 @keyframes bg{
 0%{background-position:0% 50%}
 50%{background-position:100% 50%}
 100%{background-position:0% 50%}
 }
+
 canvas{
 background:#111;
 border:4px solid white;
@@ -33,6 +36,7 @@ margin-top:20px;
 max-width:90vw;
 max-height:60vh;
 }
+
 button{
 padding:12px 25px;
 font-size:18px;
@@ -44,200 +48,427 @@ background:#00c3ff;
 color:white;
 transition:0.2s;
 }
+
 button:hover{
 transform:scale(1.1);
 background:#00ffa6;
 }
-.level{padding:6px;margin:4px;}
-.completed{color:lime;font-weight:bold;}
-#snakeTitle{font-size:60px;animation:float 2s infinite alternate;}
-@keyframes float{from{transform:translateY(0)}to{transform:translateY(-10px)}}
-#mobileControls{margin-top:15px;display:none;}
-#mobileControls button{font-size:28px;padding:15px 20px;margin:5px;}
-@media (max-width:768px){#mobileControls{display:block;}}
+
+.level{
+padding:6px;
+margin:4px;
+}
+
+.completed{
+color:lime;
+font-weight:bold;
+}
+
+#snakeTitle{
+font-size:60px;
+animation:float 2s infinite alternate;
+}
+
+@keyframes float{
+from{transform:translateY(0px)}
+to{transform:translateY(-10px)}
+}
+
+#mobileControls{
+margin-top:15px;
+display:none;
+}
+
+#mobileControls button{
+font-size:28px;
+padding:15px 20px;
+margin:5px;
+}
+
+@media (max-width:768px){
+#mobileControls{
+display:block;
+}
+}
+
 </style>
+
 </head>
 
 <body>
 
-<!-- AUTH -->
-<div id="auth">
-<h1>🐍 Snake Ultimate</h1>
+<div id="menu">
 
-<p>Pseudo (1-12 caractères)</p>
-<input id="username"><br>
-
-<p>Mot de passe (1-50 caractères)</p>
-<input id="password" type="password"><br>
-
-<button onclick="register()">Créer compte</button>
-<button onclick="showLogin()">Se connecter</button>
-
-<p id="authMsg"></p>
-</div>
-
-<div id="login" style="display:none">
-<h1>Connexion</h1>
-<input id="loginUser"><br>
-<input id="loginPass" type="password"><br>
-<button onclick="login()">Connexion</button>
-<button onclick="showRegister()">Retour</button>
-<p id="loginMsg"></p>
-</div>
-
-<!-- MENU ORIGINAL -->
-<div id="menu" style="display:none">
 <h1 id="snakeTitle">🐍 Snake Ultimate</h1>
+
 <h2 id="bestScore">Meilleur score : 0</h2>
 
 <button onclick="startClassic()">Mode Classique</button>
 <button onclick="openAdventure()">Mode aventure</button>
-<button onclick="showLeaderboard()">Classement</button>
-<button onclick="showProfile()">Profil</button>
+
 </div>
 
-<!-- PROFIL -->
-<div id="profile" style="display:none">
-<h1>👤 Profil</h1>
-<p id="profileName"></p>
-<p id="profileStats"></p>
-
-<button onclick="logout()">Se déconnecter</button>
-<button onclick="backToMenu()">Retour</button>
-</div>
-
-<!-- LEADERBOARD -->
-<div id="leaderboard" style="display:none">
-<h1>🌍 Classement</h1>
-<div id="leaderboardList"></div>
-<button onclick="backToMenu()">Retour</button>
-</div>
-
-  <!-- TON JEU ORIGINAL (100% intact) -->
 <div id="adventureMenu" style="display:none">
+
 <h1>Mode aventure</h1>
+
 <div id="levels"></div>
+
 <button onclick="backToMenu()">Retour</button>
+
 </div>
 
 <div id="game" style="display:none">
+
 <h2 id="score">Score : 0</h2>
 <p id="objective"></p>
+
 <canvas id="canvas" width="400" height="400"></canvas>
 
 <div id="mobileControls">
-<button onclick="mobileDir('up')">⬆️</button><br>
+
+<button onclick="mobileDir('up')">⬆️</button>
+<br>
 <button onclick="mobileDir('left')">⬅️</button>
 <button onclick="mobileDir('down')">⬇️</button>
 <button onclick="mobileDir('right')">➡️</button>
+
 </div>
+
 </div>
 
 <div id="gameover" style="display:none">
+
 <h1>💀 Game Over</h1>
+
 <button onclick="restartLevel()">Rejouer</button>
-<button onclick="backToMenu()">Retour</button>
+<button onclick="backToMenu()">Retour au lobby</button>
+
 </div>
 
 <div id="win" style="display:none">
+
 <h1>🏆 Niveau terminé</h1>
+
 <button onclick="nextLevel()">Niveau suivant</button>
-<button onclick="backToMenu()">Retour</button>
+<button onclick="backToMenu()">Retour au lobby</button>
+
 </div>
 
 <script>
 
-/* FIREBASE */
+<!-- 🔥 FIREBASE CONFIG -->
 const firebaseConfig = {
-apiKey:"AIzaSyDdzcbtAwYXDPfM1RAOk3YzzDfRoQcomFQ",
-authDomain:"snake-ultimate-by-soso.firebaseapp.com",
-projectId:"snake-ultimate-by-soso"
+  apiKey: "AIzaSyDdzcbtAwYXDPfM1RAOk3YzzDfRoQcomFQ",
+  authDomain: "snake-ultimate-by-soso.firebaseapp.com",
+  projectId: "snake-ultimate-by-soso",
+  storageBucket: "snake-ultimate-by-soso.firebasestorage.app",
+  messagingSenderId: "342621367023",
+  appId: "1:342621367023:web:bd16283003ce63584ec91a",
+  measurementId: "G-TEY5K15SYE"
 };
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-/* USER */
-let currentUser=null
-let totalFruits=0
-let startTime=Date.now()
+let canvas=document.getElementById("canvas")
+let ctx=canvas.getContext("2d")
 
-/* AUTH */
-function showLogin(){auth.style.display="none";login.style.display="block"}
-function showRegister(){login.style.display="none";auth.style.display="block"}
+let snake
+let food
+let dx
+let dy
+let score
+let interval
 
-async function register(){
-let user=username.value
-let pass=password.value
+let gridSize = 20
 
-if(user.length<1||user.length>12){authMsg.innerText="Pseudo invalide";return}
-if(pass.length<1||pass.length>50){authMsg.innerText="Mot de passe invalide";return}
+let mode="classic"
 
-let doc=await db.collection("users").doc(user).get()
-if(doc.exists){authMsg.innerText="Déjà pris";return}
+let level=1
+let levelGoal=10
 
-await db.collection("users").doc(user).set({
-password:pass,bestScore:0,fruits:0,time:0
+let snakeColor="lime"
+
+let colors=[
+"lime","cyan","orange","yellow","pink",
+"purple","red","blue","gold","white"
+]
+
+let appleImg = new Image()
+appleImg.src = "apple.png"
+
+let goldenAppleImg = new Image()
+goldenAppleImg.src = "golden_apple.png"
+
+let snakeHeadImg = new Image()
+snakeHeadImg.src = "snake_head.png"
+
+let bestScore=localStorage.getItem("snakeBest")||0
+document.getElementById("bestScore").innerText="Meilleur score : "+bestScore
+
+function startClassic(){
+mode="classic"
+startGame()
+}
+
+function openAdventure(){
+document.getElementById("menu").style.display="none"
+document.getElementById("adventureMenu").style.display="block"
+updateAdventureUI()
+}
+
+function updateAdventureUI(){
+
+let container=document.getElementById("levels")
+container.innerHTML=""
+
+for(let i=1;i<=10;i++){
+
+let div=document.createElement("div")
+div.className="level"
+
+let goal=i*10
+
+if(localStorage.getItem("level"+i)){
+div.classList.add("completed")
+}
+
+div.innerText="Niveau "+i+" - Score requis : "+goal
+div.onclick=()=>startAdventure(i)
+
+container.appendChild(div)
+
+}
+
+}
+
+function startAdventure(lvl){
+
+mode="adventure"
+level=lvl
+levelGoal=lvl*10
+snakeColor=colors[lvl-1]
+
+startGame()
+
+}
+
+function startGame(){
+
+document.getElementById("menu").style.display="none"
+document.getElementById("adventureMenu").style.display="none"
+document.getElementById("gameover").style.display="none"
+document.getElementById("win").style.display="none"
+
+document.getElementById("game").style.display="block"
+
+snake=[{x:200,y:200}]
+food=randomFood()
+
+dx=gridSize
+dy=0
+score=0
+
+document.getElementById("score").innerText="Score : 0"
+
+if(mode=="adventure"){
+document.getElementById("objective").innerText="Niveau "+level+" | Objectif : "+levelGoal
+}else{
+document.getElementById("objective").innerText=""
+}
+
+interval=setInterval(loop,130)
+
+}
+
+function randomFood(){
+return{
+x:Math.floor(Math.random()*(400/gridSize))*gridSize,
+y:Math.floor(Math.random()*(400/gridSize))*gridSize,
+gold:Math.random()<0.1
+}
+}
+
+document.addEventListener("keydown",direction)
+
+function direction(e){
+
+if((e.key==="ArrowUp"||e.key==="w") && dy===0){dx=0;dy=-gridSize}
+if((e.key==="ArrowDown"||e.key==="s") && dy===0){dx=0;dy=gridSize}
+if((e.key==="ArrowLeft"||e.key==="a") && dx===0){dx=-gridSize;dy=0}
+if((e.key==="ArrowRight"||e.key==="d") && dx===0){dx=gridSize;dy=0}
+
+}
+
+function mobileDir(dir){
+
+if(dir==="up" && dy===0){dx=0;dy=-gridSize}
+if(dir==="down" && dy===0){dx=0;dy=gridSize}
+if(dir==="left" && dx===0){dx=-gridSize;dy=0}
+if(dir==="right" && dx===0){dx=gridSize;dy=0}
+
+}
+
+let startX=0
+let startY=0
+
+canvas.addEventListener("touchstart",e=>{
+startX=e.touches[0].clientX
+startY=e.touches[0].clientY
 })
 
-currentUser=user
-startApp()
+canvas.addEventListener("touchend",e=>{
+
+let endX=e.changedTouches[0].clientX
+let endY=e.changedTouches[0].clientY
+
+let diffX=endX-startX
+let diffY=endY-startY
+
+if(Math.abs(diffX)>Math.abs(diffY)){
+
+if(diffX>0 && dx===0){dx=gridSize;dy=0}
+else if(diffX<0 && dx===0){dx=-gridSize;dy=0}
+
+}else{
+
+if(diffY>0 && dy===0){dx=0;dy=gridSize}
+else if(diffY<0 && dy===0){dx=0;dy=-gridSize}
+
 }
 
-async function login(){
-let doc=await db.collection("users").doc(loginUser.value).get()
-if(!doc.exists||doc.data().password!==loginPass.value){
-loginMsg.innerText="Incorrect";return
-}
-currentUser=loginUser.value
-startApp()
-}
-
-function startApp(){
-auth.style.display="none"
-login.style.display="none"
-menu.style.display="block"
-}
-
-function logout(){
-currentUser=null
-menu.style.display="none"
-profile.style.display="none"
-auth.style.display="block"
-}
-
-/* SAVE */
-async function saveData(){
-if(!currentUser)return
-let doc=await db.collection("users").doc(currentUser).get()
-let d=doc.data()
-
-await db.collection("users").doc(currentUser).update({
-bestScore:Math.max(d.bestScore,score),
-fruits:d.fruits+totalFruits,
-time:d.time+Math.floor((Date.now()-startTime)/1000)
 })
+
+function loop(){
+
+let head={
+x:snake[0].x+dx,
+y:snake[0].y+dy
 }
 
-/* PROFILE */
-async function showProfile(){
-menu.style.display="none"
-profile.style.display="block"
-
-let d=(await db.collection("users").doc(currentUser).get()).data()
-
-profileName.innerText="Pseudo : "+currentUser
-profileStats.innerText="Score max : "+d.bestScore+" | Fruits : "+d.fruits+" | Temps : "+d.time+"s"
+if(head.x<0||head.y<0||head.x>=400||head.y>=400){
+gameOver()
+return
 }
 
-/* LEADERBOARD */
-async function showLeaderboard(){
-menu.style.display="none"
-leaderboard.style.display="block"
+for(let part of snake){
+if(head.x===part.x && head.y===part.y){
+gameOver()
+return
+}
+}
 
-let snap=await db.collection("users").orderBy("bestScore","desc").limit(10).get()
-leaderboardList.innerHTML=""
-snap.forEach(doc=>{
-leaderboardList.innerHTML+=`<p>${doc.id} - ${doc.data().bestScore}</p>`
+snake.unshift(head)
+
+if(head.x===food.x && head.y===food.y){
+
+if(food.gold){
+score+=3
+}else{
+score++
+}
+
+document.getElementById("score").innerText="Score : "+score
+
+food=randomFood()
+
+if(score>bestScore){
+bestScore=score
+localStorage.setItem("snakeBest",bestScore)
+document.getElementById("bestScore").innerText="Meilleur score : "+bestScore
+}
+
+if(mode=="classic"){
+snakeColor=colors[Math.floor(score/10)%colors.length]
+}
+
+if(mode=="adventure" && score>=levelGoal){
+winLevel()
+return
+}
+
+}else{
+snake.pop()
+}
+
+ctx.fillStyle="#111"
+ctx.fillRect(0,0,400,400)
+
+if(food.gold){
+ctx.drawImage(goldenAppleImg,food.x,food.y,gridSize,gridSize)
+}else{
+ctx.drawImage(appleImg,food.x,food.y,gridSize,gridSize)
+}
+
+snake.forEach((p,i)=>{
+if(i==0){
+
+ctx.fillStyle=snakeColor
+ctx.fillRect(p.x,p.y,gridSize,gridSize)
+
+ctx.drawImage(snakeHeadImg,p.x,p.y,gridSize,gridSize)
+
+}else{
+ctx.fillStyle=snakeColor
+ctx.fillRect(p.x,p.y,gridSize,gridSize)
+}
 })
+
 }
+
+function gameOver(){
+clearInterval(interval)
+document.getElementById("game").style.display="none"
+document.getElementById("gameover").style.display="block"
+}
+
+function winLevel(){
+clearInterval(interval)
+localStorage.setItem("level"+level,true)
+document.getElementById("game").style.display="none"
+document.getElementById("win").style.display="block"
+}
+
+function nextLevel(){
+
+level++
+
+if(level>10){
+backToMenu()
+return
+}
+
+startAdventure(level)
+
+}
+
+function restartLevel(){
+
+document.getElementById("gameover").style.display="none"
+
+if(mode=="adventure"){
+startAdventure(level)
+}else{
+startClassic()
+}
+
+}
+
+function backToMenu(){
+
+document.getElementById("game").style.display="none"
+document.getElementById("gameover").style.display="none"
+document.getElementById("win").style.display="none"
+document.getElementById("adventureMenu").style.display="none"
+
+document.getElementById("menu").style.display="block"
+
+updateAdventureUI()
+
+}
+
+</script>
+
+</body>
+</html>
