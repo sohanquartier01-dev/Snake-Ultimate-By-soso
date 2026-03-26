@@ -1,78 +1,15 @@
+<!DOCTYPE html>
 <html>
 <head>
 <title>Snake Ultimate</title>
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
 
-<!-- 🔥 FIREBASE -->
 <!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 
 <style>
-
-body{
-background:linear-gradient(270deg,#0f2027,#203a43,#2c5364);
-background-size:600% 600%;
-animation:bg 10s ease infinite;
-color:white;
-font-family:Arial;
-text-align:center;
-overflow:hidden;
-margin:0;
-}
-
-@keyframes bg{
-0%{background-position:0% 50%}
-50%{background-position:100% 50%}
-100%{background-position:0% 50%}
-}
-
-canvas{
-background:#111;
-border:4px solid white;
-margin-top:20px;
-max-width:90vw;
-max-height:60vh;
-}
-
-button{
-padding:12px 25px;
-font-size:18px;
-margin:10px;
-cursor:pointer;
-border:none;
-border-radius:8px;
-background:#00c3ff;
-color:white;
-transition:0.2s;
-}
-
-button:hover{
-transform:scale(1.1);
-background:#00ffa6;
-}
-
-.level{
-padding:6px;
-margin:4px;
-}
-
-.completed{
-color:lime;
-font-weight:bold;
-}
-
-#snakeTitle{
-font-size:60px;
-animation:float 2s infinite alternate;
-}
-
-@keyframes float{
-from{transform:translateY(0px)}
-to{transform:translateY(-10px)}
 :root{
   --neon-green:#00ff88;
   --neon-blue:#00c3ff;
@@ -83,22 +20,8 @@ to{transform:translateY(-10px)}
   --border-neon:rgba(0,255,136,0.25);
 }
 
-#mobileControls{
-margin-top:15px;
-display:none;
-}
 *{box-sizing:border-box;margin:0;padding:0;}
 
-#mobileControls button{
-font-size:28px;
-padding:15px 20px;
-margin:5px;
-}
-
-@media (max-width:768px){
-#mobileControls{
-display:block;
-}
 body{
   background:var(--bg-dark);
   color:white;
@@ -386,297 +309,97 @@ canvas{
 .result-score{font-size:28px;color:var(--neon-green);margin:8px 0;}
 .result-sub{font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:20px;}
 
+/* COUNTDOWN OVERLAY */
+#countdownOverlay{
+  position:fixed;inset:0;z-index:50;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(6,10,15,0.75);
+  backdrop-filter:blur(4px);
+  pointer-events:none;
+}
+#countdownOverlay.hidden{display:none!important;}
+#countdownNumber{
+  font-family:'Press Start 2P',monospace;
+  font-size:clamp(60px,15vw,120px);
+  color:var(--neon-green);
+  text-shadow:0 0 40px var(--neon-green),0 0 80px rgba(0,255,136,0.5);
+  animation:cdPop 0.4s ease;
+}
+@keyframes cdPop{0%{transform:scale(1.8);opacity:0}100%{transform:scale(1);opacity:1}}
+
+/* PAUSE OVERLAY */
+#pauseOverlay{
+  position:fixed;inset:0;z-index:50;
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:16px;
+  background:rgba(6,10,15,0.85);
+  backdrop-filter:blur(6px);
+}
+#pauseOverlay.hidden{display:none!important;}
+.pause-title{
+  font-family:'Press Start 2P',monospace;
+  font-size:clamp(18px,4vw,32px);
+  color:var(--neon-blue);
+  text-shadow:0 0 20px var(--neon-blue);
+  margin-bottom:10px;
+}
+/* BOUTON PAUSE INGAME */
+#pauseBtn{
+  position:fixed;top:12px;right:12px;z-index:40;
+  padding:8px 14px;font-size:11px;
+  font-family:'Orbitron',monospace;font-weight:700;
+  background:rgba(0,0,0,0.6);border:1px solid rgba(0,195,255,0.4);
+  color:var(--neon-blue);border-radius:8px;cursor:pointer;
+  transition:all 0.2s;
+}
+#pauseBtn:hover{background:rgba(0,195,255,0.15);}
+
 /* LOADING */
 #loading{
   position:fixed;inset:0;z-index:999;
-  background:var(--bg-dark);
-  display:flex;align-items:center;justify-content:center;
-  flex-direction:column;gap:16px;
-}
-.loader{
-  width:40px;height:40px;
-  border:3px solid rgba(0,255,136,0.2);
-  border-top-color:var(--neon-green);
-  border-radius:50%;
-  animation:spin 0.8s linear infinite;
-}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-/* HIDDEN */
-.hidden{display:none!important;}
-</style>
-
-</head>
-
-<body>
-
-<div id="menu">
-
-<h1 id="snakeTitle">🐍 Snake Ultimate</h1>
-
-<h2 id="bestScore">Meilleur score : 0</h2>
-
-<button onclick="startClassic()">Mode Classique</button>
-<button onclick="openAdventure()">Mode aventure</button>
-
-<!-- LOADING -->
-<div id="loading">
-  <div style="font-family:'Press Start 2P',monospace;font-size:18px;color:var(--neon-green);text-shadow:0 0 20px var(--neon-green)">🐍</div>
-  <div class="loader"></div>
-  <div style="font-size:9px;color:rgba(0,255,136,0.5);letter-spacing:3px">CHARGEMENT...</div>
-</div>
-
-<div id="adventureMenu" style="display:none">
-
-<h1>Mode aventure</h1>
-
-<div id="levels"></div>
-
-<button onclick="backToMenu()">Retour</button>
-
-<!-- AUTH - REGISTER -->
-<div id="screenAuth" class="screen hidden">
-  <div class="main-title">🐍 SNAKE</div>
-  <div class="subtitle">U L T I M A T E</div>
-  <div class="card">
-    <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:20px;letter-spacing:2px">CRÉER UN COMPTE</div>
-    <input id="regUser" placeholder="Pseudo" autocomplete="off">
-    <input id="regPass" type="password" placeholder="Mot de passe">
-    <input id="regPass2" type="password" placeholder="Confirmer le mot de passe">
-    <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="register()">Créer mon compte</button>
-    <div class="divider">ou</div>
-    <button class="btn btn-secondary" style="width:100%" onclick="showScreen('screenLogin')">J'ai déjà un compte</button>
-    <div id="regMsg" class="msg"></div>
+@@ -416,6 +461,21 @@
   </div>
 </div>
 
-<div id="game" style="display:none">
-
-<h2 id="score">Score : 0</h2>
-<p id="objective"></p>
-
-<canvas id="canvas" width="400" height="400"></canvas>
-
-<div id="mobileControls">
-
-<button onclick="mobileDir('up')">⬆️</button>
-<br>
-<button onclick="mobileDir('left')">⬅️</button>
-<button onclick="mobileDir('down')">⬇️</button>
-<button onclick="mobileDir('right')">➡️</button>
-
-<!-- AUTH - LOGIN -->
-<div id="screenLogin" class="screen hidden">
-  <div class="main-title">🐍 SNAKE</div>
-  <div class="subtitle">U L T I M A T E</div>
-  <div class="card">
-    <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:20px;letter-spacing:2px">CONNEXION</div>
-    <input id="loginUser" placeholder="Pseudo" autocomplete="off">
-    <input id="loginPass" type="password" placeholder="Mot de passe">
-    <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="login()">Se connecter</button>
-    <div class="divider">ou</div>
-    <button class="btn btn-secondary" style="width:100%" onclick="showScreen('screenAuth')">Créer un compte</button>
-    <div id="loginMsg" class="msg"></div>
-  </div>
+<!-- COUNTDOWN OVERLAY -->
+<div id="countdownOverlay" class="hidden">
+  <div id="countdownNumber">3</div>
 </div>
 
-<!-- MENU -->
-<div id="screenMenu" class="screen hidden">
-  <div class="main-title">🐍 SNAKE</div>
-  <div class="subtitle">U L T I M A T E</div>
-  <h3 id="bestScore" style="font-size:12px;color:var(--neon-gold);margin-bottom:24px;"></h3>
-  <div class="menu-buttons">
-    <button class="btn btn-primary" onclick="startClassic()">▶ Mode Classique</button>
-    <button class="btn btn-secondary" onclick="showScreen('screenAdventure');updateAdventureUI()">🗺 Mode Aventure</button>
-    <button class="btn btn-secondary" onclick="showLeaderboard()">🏆 Classement</button>
-    <button class="btn btn-secondary" onclick="showProfile()">👤 Profil</button>
-    <button class="btn btn-danger" style="margin-top:10px;font-size:10px" onclick="logout()">Déconnexion</button>
-  </div>
+<!-- PAUSE OVERLAY -->
+<div id="pauseOverlay" class="hidden">
+  <div class="pause-title">⏸ PAUSE</div>
+  <button class="btn btn-primary" onclick="resumeGame()">▶ Reprendre</button>
+  <button class="btn btn-danger" onclick="quitToMenu()">⌂ Quitter la partie</button>
 </div>
 
-<div id="gameover" style="display:none">
+<!-- BOUTON PAUSE INGAME -->
+<button id="pauseBtn" class="hidden" onclick="togglePause()">⏸ PAUSE</button>
 
-<h1>💀 Game Over</h1>
-
-<button onclick="restartLevel()">Rejouer</button>
-<button onclick="backToMenu()">Retour au lobby</button>
-<!-- ADVENTURE MENU -->
-<div id="screenAdventure" class="screen hidden">
-  <div class="main-title" style="font-size:clamp(14px,3vw,28px);margin-bottom:6px">MODE AVENTURE</div>
-  <div class="subtitle" style="margin-bottom:20px">CHOISIR UN NIVEAU</div>
-  <div id="levels" class="levels-grid"></div>
-  <button class="btn btn-secondary" style="margin-top:16px" onclick="showScreen('screenMenu')">← Retour</button>
-</div>
-
-<!-- GAME -->
-<div id="screenGame" class="screen hidden" style="padding:10px">
-  <div class="score-bar">
-    <div>
-      <div style="font-size:9px;color:rgba(255,255,255,0.4)">SCORE</div>
-      <div class="score-val" id="scoreDisplay">0</div>
-    </div>
-    <div id="objectiveTag" class="objective-tag hidden"></div>
-    <div>
-      <div style="font-size:9px;color:rgba(255,255,255,0.4)">BEST</div>
-      <div style="font-size:14px;font-weight:700;color:var(--neon-gold)" id="bestInGame">0</div>
-    </div>
-  </div>
-  <canvas id="canvas" width="400" height="400"></canvas>
-  <div id="mobileControls">
-    <div><button class="btn btn-secondary" onclick="mobileDir('up')">⬆️</button></div>
-    <div>
-      <button class="btn btn-secondary" onclick="mobileDir('left')">⬅️</button>
-      <button class="btn btn-secondary" onclick="mobileDir('down')">⬇️</button>
-      <button class="btn btn-secondary" onclick="mobileDir('right')">➡️</button>
-    </div>
-  </div>
-</div>
-
-<div id="win" style="display:none">
 <!-- GAME OVER -->
 <div id="screenGameover" class="screen hidden">
   <div class="result-icon">💀</div>
-  <div style="font-family:'Press Start 2P',monospace;font-size:18px;color:var(--neon-pink);margin-bottom:8px">GAME OVER</div>
-  <div class="result-score" id="goScore"></div>
-  <div class="result-sub" id="goSub"></div>
-  <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
-    <button class="btn btn-primary" onclick="restartLevel()">↺ Rejouer</button>
-    <button class="btn btn-secondary" onclick="showScreen('screenMenu')">⌂ Menu</button>
-  </div>
-</div>
-
-<h1>🏆 Niveau terminé</h1>
-<!-- WIN -->
-<div id="screenWin" class="screen hidden">
-  <div class="result-icon">🏆</div>
-  <div style="font-family:'Press Start 2P',monospace;font-size:16px;color:var(--neon-gold);margin-bottom:8px">NIVEAU TERMINÉ !</div>
-  <div class="result-score" id="winScore"></div>
-  <div class="result-sub" id="winSub"></div>
-  <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
-    <button class="btn btn-gold" onclick="nextLevel()">Niveau suivant →</button>
-    <button class="btn btn-secondary" onclick="showScreen('screenMenu')">⌂ Menu</button>
-  </div>
-</div>
-
-<button onclick="nextLevel()">Niveau suivant</button>
-<button onclick="backToMenu()">Retour au lobby</button>
-<!-- LEADERBOARD -->
-<div id="screenLeaderboard" class="screen hidden">
-  <div class="main-title" style="font-size:clamp(14px,3vw,24px);margin-bottom:6px">🏆 CLASSEMENT</div>
-  <div class="subtitle" style="margin-bottom:20px">TOP 10 MONDIAL</div>
-  <div id="leaderboardList" style="width:100%;max-width:380px;max-height:55vh;overflow-y:auto"></div>
-  <button class="btn btn-secondary" style="margin-top:16px" onclick="showScreen('screenMenu')">← Retour</button>
-</div>
-
-<!-- PROFIL -->
-<div id="screenProfile" class="screen hidden">
-  <div class="main-title" style="font-size:clamp(14px,3vw,24px);margin-bottom:6px">👤 PROFIL</div>
-  <div class="card" style="max-width:360px">
-    <div class="username-display" id="profileName"></div>
-    <div class="username-tag">JOUEUR</div>
-    <div class="profile-stats">
-      <div class="stat-box">
-        <div class="stat-val" id="profileBest">0</div>
-        <div class="stat-label">BEST SCORE</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-val" id="profileFruits">0</div>
-        <div class="stat-label">FRUITS</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-val" id="profileLevels">0</div>
-        <div class="stat-label">NIVEAUX</div>
-      </div>
-    </div>
-    <div id="profileRank" style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:16px"></div>
-  </div>
-  <button class="btn btn-secondary" style="margin-top:16px" onclick="showScreen('screenMenu')">← Retour</button>
-</div>
-
-<script>
-
-<!-- 🔥 FIREBASE CONFIG -->
-/* ===== FIREBASE CONFIG ===== */
-const firebaseConfig = {
-  apiKey: "AIzaSyDdzcbtAwYXDPfM1RAOk3YzzDfRoQcomFQ",
-  authDomain: "snake-ultimate-by-soso.firebaseapp.com",
-  projectId: "snake-ultimate-by-soso",
-  storageBucket: "snake-ultimate-by-soso.firebasestorage.app",
-  messagingSenderId: "342621367023",
-  appId: "1:342621367023:web:bd16283003ce63584ec91a",
-  measurementId: "G-TEY5K15SYE"
-  appId: "1:342621367023:web:bd16283003ce63584ec91a"
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-let canvas=document.getElementById("canvas")
-let ctx=canvas.getContext("2d")
-/* ===== STATE ===== */
+@@ -492,7 +552,6 @@
 let currentUser = null
 let userData = null
 let sessionFruits = 0
 let sessionStart = Date.now()
 
-let snake
-let food
-let dx
-let dy
-let score
-let interval
 let canvas = document.getElementById("canvas")
 let ctx = canvas.getContext("2d")
-
-let snake, food, dx, dy, score, interval
-let gridSize = 20
-
-let mode="classic"
-
-let level=1
-let levelGoal=10
-
-let snakeColor="lime"
-
-let colors=[
-"lime","cyan","orange","yellow","pink",
-"purple","red","blue","gold","white"
-]
-
-let appleImg = new Image()
-appleImg.src = "apple.png"
-
-let goldenAppleImg = new Image()
-goldenAppleImg.src = "golden_apple.png"
-
-let snakeHeadImg = new Image()
-snakeHeadImg.src = "snake_head.png"
-
-let bestScore=localStorage.getItem("snakeBest")||0
-document.getElementById("bestScore").innerText="Meilleur score : "+bestScore
-
-function startClassic(){
-mode="classic"
-startGame()
-let mode = "classic"
+@@ -503,6 +562,11 @@
 let level = 1
 let levelGoal = 10
 let snakeColor = "lime"
+let isPaused = false
+
+// BUG 3 FIX : buffer de direction pour éviter le demi-tour sur la même frame
+let nextDx, nextDy
+let directionChanged = false
 
 let colors = ["lime","cyan","orange","yellow","pink","purple","red","#00c3ff","gold","white"]
 
-let appleImg = new Image(); appleImg.src = "apple.png"
-let goldenAppleImg = new Image(); goldenAppleImg.src = "golden_apple.png"
-let snakeHeadImg = new Image(); snakeHeadImg.src = "snake_head.png"
-
-/* ===== NAVIGATION ===== */
-function showScreen(id){
-  document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'))
-  document.getElementById(id).classList.remove('hidden')
-}
-
-/* ===== AUTH ===== */
-async function register(){
+@@ -521,7 +585,6 @@
   let user = document.getElementById("regUser").value.trim()
   let pass = document.getElementById("regPass").value
   let pass2 = document.getElementById("regPass2").value
@@ -684,30 +407,16 @@ async function register(){
 
   if(!user || user.length < 3){ setMsg("regMsg","Pseudo trop court (min 3 caractères)","error"); return }
   if(pass.length < 4){ setMsg("regMsg","Mot de passe trop court (min 4 caractères)","error"); return }
-  if(pass !== pass2){ setMsg("regMsg","Les mots de passe ne correspondent pas","error"); return }
-  if(/[^a-zA-Z0-9_-]/.test(user)){ setMsg("regMsg","Pseudo invalide (lettres, chiffres, _ - seulement)","error"); return }
-
-  try{
-    setMsg("regMsg","Vérification...","")
-    let doc = await db.collection("users").doc(user).get()
-    if(doc.exists){ setMsg("regMsg","Ce pseudo est déjà pris","error"); return }
-
-    await db.collection("users").doc(user).set({
-      password: pass,
+@@ -538,6 +601,8 @@
       bestScore: 0,
       totalFruits: 0,
       levelsCompleted: 0,
+      // BUG 2 FIX : niveaux stockés dans Firebase, pas localStorage
+      completedLevels: [],
       createdAt: Date.now()
     })
 
-    currentUser = user
-    await loadUserData()
-    startApp()
-  }catch(e){
-    setMsg("regMsg","Erreur : "+e.message,"error")
-  }
-}
-
+@@ -552,7 +617,6 @@
 async function login(){
   let user = document.getElementById("loginUser").value.trim()
   let pass = document.getElementById("loginPass").value
@@ -715,41 +424,22 @@ async function login(){
 
   if(!user || !pass){ setMsg("loginMsg","Remplis tous les champs","error"); return }
 
-  try{
-    setMsg("loginMsg","Connexion...","")
-    let doc = await db.collection("users").doc(user).get()
-    if(!doc.exists || doc.data().password !== pass){
-      setMsg("loginMsg","Pseudo ou mot de passe incorrect","error"); return
-    }
-
-    currentUser = user
-    userData = doc.data()
-    startApp()
-  }catch(e){
-    setMsg("loginMsg","Erreur : "+e.message,"error")
-  }
-}
-
-function logout(){
-  currentUser = null
-  userData = null
-  showScreen('screenAuth')
-}
-
-function setMsg(id, text, type){
-  let el = document.getElementById(id)
-  el.textContent = text
-  el.className = "msg " + type
-}
-
-/* ===== DONNÉES USER ===== */
-async function loadUserData(){
+@@ -588,40 +652,50 @@
   if(!currentUser) return
   let doc = await db.collection("users").doc(currentUser).get()
   userData = doc.data()
+  // Compatibilité anciens comptes sans completedLevels
+  if(!userData.completedLevels) userData.completedLevels = []
+}
+
+// BUG 2 FIX : vérifie si un niveau est complété via Firebase (userData)
+function isLevelCompleted(lvl){
+  if(!userData || !userData.completedLevels) return false
+  return userData.completedLevels.includes(lvl)
 }
 
 async function saveData(){
+async function saveData(levelCompleted){
   if(!currentUser || !userData) return
   try{
     let doc = await db.collection("users").doc(currentUser).get()
@@ -761,14 +451,24 @@ async function saveData(){
       totalFruits: d.totalFruits + sessionFruits,
       levelsCompleted: Math.max(d.levelsCompleted || 0, levelsNow)
     })
+    let updateObj = {
+      bestScore: Math.max(d.bestScore || 0, score),
+      totalFruits: (d.totalFruits || 0) + sessionFruits,
+    }
+
+    // BUG 2 FIX : sauvegarder le niveau complété dans Firebase
+    if(levelCompleted){
+      let arr = d.completedLevels || []
+      if(!arr.includes(levelCompleted)) arr.push(levelCompleted)
+      updateObj.completedLevels = arr
+      updateObj.levelsCompleted = arr.length
+    }
+
+    await db.collection("users").doc(currentUser).update(updateObj)
     await loadUserData()
   }catch(e){ console.error("saveData:", e) }
 }
 
-function openAdventure(){
-document.getElementById("menu").style.display="none"
-document.getElementById("adventureMenu").style.display="block"
-updateAdventureUI()
 function countCompletedLevels(){
   let count = 0
   for(let i=1;i<=10;i++){ if(localStorage.getItem("level"+i)) count++ }
@@ -783,326 +483,215 @@ function startApp(){
   showScreen('screenMenu')
 }
 
+// BUG 1 FIX : mise à jour du best score menu à chaque retour
 function updateBestScoreDisplay(){
   let best = userData ? userData.bestScore : 0
+  let best = userData ? (userData.bestScore || 0) : 0
   document.getElementById("bestScore").innerText = "🏆 Meilleur score : " + best
   document.getElementById("bestInGame").innerText = best
 }
-
-/* ===== MENU AVENTURE ===== */
-function updateAdventureUI(){
-
-let container=document.getElementById("levels")
-container.innerHTML=""
-
-for(let i=1;i<=10;i++){
-
-let div=document.createElement("div")
-div.className="level"
-
-let goal=i*10
-
-if(localStorage.getItem("level"+i)){
-div.classList.add("completed")
-}
-
-div.innerText="Niveau "+i+" - Score requis : "+goal
-div.onclick=()=>startAdventure(i)
-
-container.appendChild(div)
-
+@@ -631,10 +705,10 @@
   let container = document.getElementById("levels")
   container.innerHTML = ""
   for(let i=1;i<=10;i++){
+    let done = isLevelCompleted(i)  // BUG 2 FIX : utilise Firebase
     let div = document.createElement("div")
     div.className = "level-card"
     if(localStorage.getItem("level"+i)) div.classList.add("completed")
     div.innerHTML = `<div class="level-num">${localStorage.getItem("level"+i)?"✅":"🔹"} Niveau ${i}</div><div class="level-goal">Objectif : ${i*10} pts</div>`
+    div.className = "level-card" + (done ? " completed" : "")
+    div.innerHTML = `<div class="level-num">${done?"✅":"🔹"} Niveau ${i}</div><div class="level-goal">Objectif : ${i*10} pts</div>`
     div.onclick = () => startAdventure(i)
     container.appendChild(div)
   }
-}
-
-/* ===== JEU ===== */
-function startClassic(){
-  mode = "classic"
-  startGame()
-}
-
-function openAdventure(){
-  showScreen('screenAdventure')
-  updateAdventureUI()
-}
-
-function startAdventure(lvl){
-
-mode="adventure"
-level=lvl
-levelGoal=lvl*10
-snakeColor=colors[lvl-1]
-
-startGame()
-
-  mode = "adventure"
-  level = lvl
-  levelGoal = lvl * 10
-  snakeColor = colors[lvl-1]
-  startGame()
-}
+@@ -661,8 +735,11 @@
 
 function startGame(){
   sessionFruits = 0
+  isPaused = false
   showScreen('screenGame')
 
-document.getElementById("menu").style.display="none"
-document.getElementById("adventureMenu").style.display="none"
-document.getElementById("gameover").style.display="none"
-document.getElementById("win").style.display="none"
+  document.getElementById("pauseBtn").classList.remove("hidden")
+
   let obj = document.getElementById("objectiveTag")
   if(mode === "adventure"){
     obj.textContent = "NIVEAU "+level+" | OBJECTIF "+levelGoal
-    obj.classList.remove("hidden")
-  } else {
-    obj.classList.add("hidden")
-  }
+@@ -673,12 +750,84 @@
 
-document.getElementById("game").style.display="block"
   snake = [{x:200,y:200}]
   food = randomFood()
   dx = gridSize; dy = 0; score = 0
+  dx = gridSize; dy = 0
+  nextDx = gridSize; nextDy = 0
+  directionChanged = false
+  score = 0
 
-snake=[{x:200,y:200}]
-food=randomFood()
-
-dx=gridSize
-dy=0
-score=0
-
-document.getElementById("score").innerText="Score : 0"
-
-if(mode=="adventure"){
-document.getElementById("objective").innerText="Niveau "+level+" | Objectif : "+levelGoal
-}else{
-document.getElementById("objective").innerText=""
-}
-
-interval=setInterval(loop,130)
   document.getElementById("scoreDisplay").innerText = "0"
+  updateBestScoreDisplay()
 
   clearInterval(interval)
   interval = setInterval(loop, 130)
+
+  // COUNTDOWN avant de lancer
+  startCountdown(() => {
+    interval = setInterval(loop, 130)
+  })
+}
+
+/* ===== COUNTDOWN ===== */
+function startCountdown(callback){
+  let overlay = document.getElementById("countdownOverlay")
+  let numEl = document.getElementById("countdownNumber")
+  overlay.classList.remove("hidden")
+
+  let count = 3
+  numEl.textContent = count
+
+  let timer = setInterval(()=>{
+    count--
+    if(count === 0){
+      numEl.textContent = "GO !"
+      numEl.style.color = "var(--neon-gold)"
+      numEl.style.textShadow = "0 0 40px var(--neon-gold)"
+    } else if(count < 0){
+      clearInterval(timer)
+      overlay.classList.add("hidden")
+      numEl.style.color = "var(--neon-green)"
+      numEl.style.textShadow = "0 0 40px var(--neon-green)"
+      callback()
+    } else {
+      // Force re-animation
+      numEl.style.animation = "none"
+      numEl.offsetHeight // reflow
+      numEl.style.animation = "cdPop 0.4s ease"
+      numEl.textContent = count
+    }
+  }, 900)
+}
+
+/* ===== PAUSE ===== */
+function togglePause(){
+  if(isPaused) resumeGame()
+  else pauseGame()
+}
+
+function pauseGame(){
+  if(isPaused) return
+  isPaused = true
+  clearInterval(interval)
+  document.getElementById("pauseOverlay").classList.remove("hidden")
+}
+
+function resumeGame(){
+  document.getElementById("pauseOverlay").classList.add("hidden")
+  isPaused = false
+  // Countdown avant de reprendre
+  startCountdown(()=>{
+    interval = setInterval(loop, 130)
+  })
+}
+
+function quitToMenu(){
+  clearInterval(interval)
+  isPaused = false
+  document.getElementById("pauseOverlay").classList.add("hidden")
+  document.getElementById("pauseBtn").classList.add("hidden")
+  document.getElementById("countdownOverlay").classList.add("hidden")
+  showScreen('screenMenu')
+  // BUG 1 FIX : on recharge les données pour avoir le bon best score
+  loadUserData().then(updateBestScoreDisplay)
 }
 
 function randomFood(){
-return{
-x:Math.floor(Math.random()*(400/gridSize))*gridSize,
-y:Math.floor(Math.random()*(400/gridSize))*gridSize,
-gold:Math.random()<0.1
-}
-  return{
-    x: Math.floor(Math.random()*(400/gridSize))*gridSize,
-    y: Math.floor(Math.random()*(400/gridSize))*gridSize,
-    gold: Math.random() < 0.1
+@@ -689,42 +838,62 @@
   }
 }
 
-document.addEventListener("keydown",direction)
 document.addEventListener("keydown", direction)
+/* ===== CONTROLS ===== */
+document.addEventListener("keydown", e => {
+  // Pause avec Échap
+  if(e.key === "Escape"){
+    let gameVisible = !document.getElementById("screenGame").classList.contains("hidden")
+    if(gameVisible) togglePause()
+    return
+  }
+  handleDirection(e.key)
+})
 
 function direction(e){
-
-if((e.key==="ArrowUp"||e.key==="w") && dy===0){dx=0;dy=-gridSize}
-if((e.key==="ArrowDown"||e.key==="s") && dy===0){dx=0;dy=gridSize}
-if((e.key==="ArrowLeft"||e.key==="a") && dx===0){dx=-gridSize;dy=0}
-if((e.key==="ArrowRight"||e.key==="d") && dx===0){dx=gridSize;dy=0}
-
   if((e.key==="ArrowUp"||e.key==="w") && dy===0){dx=0;dy=-gridSize}
   if((e.key==="ArrowDown"||e.key==="s") && dy===0){dx=0;dy=gridSize}
   if((e.key==="ArrowLeft"||e.key==="a") && dx===0){dx=-gridSize;dy=0}
   if((e.key==="ArrowRight"||e.key==="d") && dx===0){dx=gridSize;dy=0}
+// BUG 3 FIX : buffer de direction — on stocke la prochaine direction, appliquée seulement au prochain tick
+function handleDirection(key){
+  if(isPaused) return
+  if((key==="ArrowUp"||key==="w") && dy===0 && nextDy===0){ nextDx=0; nextDy=-gridSize }
+  if((key==="ArrowDown"||key==="s") && dy===0 && nextDy===0){ nextDx=0; nextDy=gridSize }
+  if((key==="ArrowLeft"||key==="a") && dx===0 && nextDx===0){ nextDx=-gridSize; nextDy=0 }
+  if((key==="ArrowRight"||key==="d") && dx===0 && nextDx===0){ nextDx=gridSize; nextDy=0 }
 }
 
 function mobileDir(dir){
-
-if(dir==="up" && dy===0){dx=0;dy=-gridSize}
-if(dir==="down" && dy===0){dx=0;dy=gridSize}
-if(dir==="left" && dx===0){dx=-gridSize;dy=0}
-if(dir==="right" && dx===0){dx=gridSize;dy=0}
-
-}
-
-let startX=0
-let startY=0
-
-canvas.addEventListener("touchstart",e=>{
-startX=e.touches[0].clientX
-startY=e.touches[0].clientY
-})
-
-canvas.addEventListener("touchend",e=>{
-
-let endX=e.changedTouches[0].clientX
-let endY=e.changedTouches[0].clientY
-
-let diffX=endX-startX
-let diffY=endY-startY
-
-if(Math.abs(diffX)>Math.abs(diffY)){
-
-if(diffX>0 && dx===0){dx=gridSize;dy=0}
-else if(diffX<0 && dx===0){dx=-gridSize;dy=0}
-
-}else{
-
-if(diffY>0 && dy===0){dx=0;dy=gridSize}
-else if(diffY<0 && dy===0){dx=0;dy=-gridSize}
-
-}
-
-})
   if(dir==="up" && dy===0){dx=0;dy=-gridSize}
   if(dir==="down" && dy===0){dx=0;dy=gridSize}
   if(dir==="left" && dx===0){dx=-gridSize;dy=0}
   if(dir==="right" && dx===0){dx=gridSize;dy=0}
+  if(isPaused) return
+  // BUG 3 FIX : même logique buffer pour mobile
+  if(dir==="up" && dy===0 && nextDy===0){ nextDx=0; nextDy=-gridSize }
+  if(dir==="down" && dy===0 && nextDy===0){ nextDx=0; nextDy=gridSize }
+  if(dir==="left" && dx===0 && nextDx===0){ nextDx=-gridSize; nextDy=0 }
+  if(dir==="right" && dx===0 && nextDx===0){ nextDx=gridSize; nextDy=0 }
 }
 
 let startX=0, startY=0
 canvas.addEventListener("touchstart", e=>{startX=e.touches[0].clientX;startY=e.touches[0].clientY},{passive:true})
 canvas.addEventListener("touchend", e=>{
+  if(isPaused) return
   let diffX = e.changedTouches[0].clientX - startX
   let diffY = e.changedTouches[0].clientY - startY
   if(Math.abs(diffX)>Math.abs(diffY)){
     if(diffX>0 && dx===0){dx=gridSize;dy=0}
     else if(diffX<0 && dx===0){dx=-gridSize;dy=0}
+    if(diffX>0 && dx===0 && nextDx===0){nextDx=gridSize;nextDy=0}
+    else if(diffX<0 && dx===0 && nextDx===0){nextDx=-gridSize;nextDy=0}
   }else{
     if(diffY>0 && dy===0){dx=0;dy=gridSize}
     else if(diffY<0 && dy===0){dx=0;dy=-gridSize}
+    if(diffY>0 && dy===0 && nextDy===0){nextDx=0;nextDy=gridSize}
+    else if(diffY<0 && dy===0 && nextDy===0){nextDx=0;nextDy=-gridSize}
   }
 },{passive:true})
 
+/* ===== LOOP ===== */
 function loop(){
+  // BUG 3 FIX : appliquer la direction bufferisée au début du tick
+  dx = nextDx; dy = nextDy
+  directionChanged = false
 
-let head={
-x:snake[0].x+dx,
-y:snake[0].y+dy
-}
-
-if(head.x<0||head.y<0||head.x>=400||head.y>=400){
-gameOver()
-return
-}
-
-for(let part of snake){
-if(head.x===part.x && head.y===part.y){
-gameOver()
-return
-}
-}
-
-snake.unshift(head)
-
-if(head.x===food.x && head.y===food.y){
-
-if(food.gold){
-score+=3
-}else{
-score++
-}
-
-document.getElementById("score").innerText="Score : "+score
-
-food=randomFood()
-
-if(score>bestScore){
-bestScore=score
-localStorage.setItem("snakeBest",bestScore)
-document.getElementById("bestScore").innerText="Meilleur score : "+bestScore
-}
-
-if(mode=="classic"){
-snakeColor=colors[Math.floor(score/10)%colors.length]
-}
-
-if(mode=="adventure" && score>=levelGoal){
-winLevel()
-return
-}
-
-}else{
-snake.pop()
-}
-
-ctx.fillStyle="#111"
-ctx.fillRect(0,0,400,400)
-
-if(food.gold){
-ctx.drawImage(goldenAppleImg,food.x,food.y,gridSize,gridSize)
-}else{
-ctx.drawImage(appleImg,food.x,food.y,gridSize,gridSize)
-}
-
-snake.forEach((p,i)=>{
-if(i==0){
-
-ctx.fillStyle=snakeColor
-ctx.fillRect(p.x,p.y,gridSize,gridSize)
-
-ctx.drawImage(snakeHeadImg,p.x,p.y,gridSize,gridSize)
-
-}else{
-ctx.fillStyle=snakeColor
-ctx.fillRect(p.x,p.y,gridSize,gridSize)
-}
-})
-
-}
-
-function gameOver(){
-clearInterval(interval)
-document.getElementById("game").style.display="none"
-document.getElementById("gameover").style.display="block"
-}
-
-function winLevel(){
-clearInterval(interval)
-localStorage.setItem("level"+level,true)
-document.getElementById("game").style.display="none"
-document.getElementById("win").style.display="block"
   let head = {x:snake[0].x+dx, y:snake[0].y+dy}
 
   if(head.x<0||head.y<0||head.x>=400||head.y>=400){gameOver();return}
   for(let part of snake){
     if(head.x===part.x && head.y===part.y){gameOver();return}
+  // BUG 3 FIX : on vérifie seulement à partir de l'index 1 (pas la tête elle-même)
+  for(let i=1; i<snake.length; i++){
+    if(head.x===snake[i].x && head.y===snake[i].y){gameOver();return}
   }
 
   snake.unshift(head)
-
-  if(head.x===food.x && head.y===food.y){
-    let pts = food.gold ? 3 : 1
-    score += pts
-    sessionFruits += pts
+@@ -736,7 +905,7 @@
 
     document.getElementById("scoreDisplay").innerText = score
 
     let best = userData ? userData.bestScore : 0
+    let best = userData ? (userData.bestScore || 0) : 0
     if(score > best){
       document.getElementById("bestInGame").innerText = score
     }
-
-    food = randomFood()
-
-    if(mode==="classic"){
-      snakeColor = colors[Math.floor(score/10)%colors.length]
-    }
-
-    if(mode==="adventure" && score>=levelGoal){
-      winLevel(); return
-    }
-  }else{
-    snake.pop()
-  }
-
-  // Dessin
+@@ -758,13 +927,11 @@
   ctx.fillStyle="#0a0f0a"
   ctx.fillRect(0,0,400,400)
 
@@ -1116,10 +705,7 @@ document.getElementById("win").style.display="block"
   if(food.gold){
     try{ctx.drawImage(goldenAppleImg,food.x,food.y,gridSize,gridSize)}catch{
       ctx.fillStyle="gold";ctx.fillRect(food.x,food.y,gridSize,gridSize)
-    }
-  }else{
-    try{ctx.drawImage(appleImg,food.x,food.y,gridSize,gridSize)}catch{
-      ctx.fillStyle="#ff4444";ctx.fillRect(food.x,food.y,gridSize,gridSize)
+@@ -775,14 +942,12 @@
     }
   }
 
@@ -1134,18 +720,19 @@ document.getElementById("win").style.display="block"
       let alpha = Math.max(0.4, 1 - i/snake.length * 0.6)
       ctx.globalAlpha = alpha
       ctx.fillStyle = snakeColor
-      ctx.fillRect(p.x+1,p.y+1,gridSize-2,gridSize-2)
-      ctx.globalAlpha = 1
-    }
-  })
-}
+@@ -794,25 +959,28 @@
 
 async function gameOver(){
   clearInterval(interval)
   await saveData()
   let best = userData ? userData.bestScore : 0
+  document.getElementById("pauseBtn").classList.add("hidden")
+  await saveData(null)
+  // BUG 1 FIX : recharger userData pour afficher le bon best score dans le menu ensuite
+  let best = userData ? (userData.bestScore || 0) : 0
   document.getElementById("goScore").innerText = "Score : " + score
   document.getElementById("goSub").innerText = score >= best ? "🎉 Nouveau record !" : "Meilleur : " + best
+  document.getElementById("goSub").innerText = score > best ? "🎉 Nouveau record !" : "Meilleur : " + Math.max(best, score)
   showScreen('screenGameover')
 }
 
@@ -1153,103 +740,59 @@ async function winLevel(){
   clearInterval(interval)
   localStorage.setItem("level"+level, true)
   await saveData()
+  document.getElementById("pauseBtn").classList.add("hidden")
+  // BUG 2 FIX : sauvegarde le niveau dans Firebase
+  await saveData(level)
   document.getElementById("winScore").innerText = "Score : " + score
   document.getElementById("winSub").innerText = "Niveau " + level + " complété !"
   showScreen('screenWin')
 }
 
 function nextLevel(){
-
-level++
-
-if(level>10){
-backToMenu()
-return
-}
-
-startAdventure(level)
-
   level++
   if(level>10){showScreen('screenMenu');return}
+  if(level>10){ showScreen('screenMenu'); loadUserData().then(updateBestScoreDisplay); return }
   startAdventure(level)
 }
 
-function restartLevel(){
-
-document.getElementById("gameover").style.display="none"
-
-if(mode=="adventure"){
-startAdventure(level)
-}else{
-startClassic()
-}
-
-}
-
-function backToMenu(){
-
-document.getElementById("game").style.display="none"
-document.getElementById("gameover").style.display="none"
-document.getElementById("win").style.display="none"
-document.getElementById("adventureMenu").style.display="none"
-
-document.getElementById("menu").style.display="block"
-
-updateAdventureUI()
-
-}
-  if(mode==="adventure") startAdventure(level)
+@@ -821,6 +989,24 @@
   else startClassic()
 }
+
+/* ===== RETOUR MENU (BUG 1 FIX) ===== */
+// On surcharge showScreen pour que le menu recharge toujours le best score
+const _origShowScreen = showScreen
+function goToMenu(){
+  document.getElementById("pauseBtn").classList.add("hidden")
+  document.getElementById("pauseOverlay").classList.add("hidden")
+  document.getElementById("countdownOverlay").classList.add("hidden")
+  clearInterval(interval)
+  showScreen('screenMenu')
+  // BUG 1 FIX : rafraîchir best score à chaque retour menu
+  loadUserData().then(updateBestScoreDisplay)
+}
+
+// Rediriger les boutons "⌂ Menu" des écrans gameover/win vers goToMenu
+document.querySelectorAll('[onclick="showScreen(\'screenMenu\')"]').forEach(btn=>{
+  btn.setAttribute('onclick','goToMenu()')
+})
 
 /* ===== LEADERBOARD ===== */
 async function showLeaderboard(){
   showScreen('screenLeaderboard')
-  let list = document.getElementById("leaderboardList")
-  list.innerHTML = '<div style="font-size:10px;color:rgba(255,255,255,0.4)">Chargement...</div>'
-
-  try{
-    let snap = await db.collection("users").orderBy("bestScore","desc").limit(10).get()
-    list.innerHTML = ""
-    let rank = 1
-    let medals = ["🥇","🥈","🥉"]
-
-    snap.forEach(doc=>{
-      let d = doc.data()
-      let div = document.createElement("div")
-      div.className = "lb-entry" + (rank<=3?" rank-"+rank:"") + (doc.id===currentUser?" me":"")
-      div.innerHTML = `
-        <div class="lb-rank">${medals[rank-1]||rank}</div>
-        <div class="lb-name">${doc.id}${doc.id===currentUser?' <span style="font-size:8px;color:var(--neon-blue)">(moi)</span>':''}</div>
-        <div class="lb-score">${d.bestScore}</div>
-      `
-      list.appendChild(div)
-      rank++
-    })
-
-    if(snap.empty){
-      list.innerHTML = '<div style="font-size:10px;color:rgba(255,255,255,0.3)">Aucun score enregistré</div>'
-    }
-  }catch(e){
-    list.innerHTML = '<div style="color:var(--neon-pink);font-size:10px">Erreur de chargement</div>'
-  }
-}
-
-/* ===== PROFIL ===== */
-async function showProfile(){
-  showScreen('screenProfile')
-  if(!userData) await loadUserData()
-
+@@ -862,25 +1048,24 @@
   document.getElementById("profileName").innerText = currentUser
   document.getElementById("profileBest").innerText = userData.bestScore || 0
   document.getElementById("profileFruits").innerText = userData.totalFruits || 0
   document.getElementById("profileLevels").innerText = userData.levelsCompleted || 0
+  document.getElementById("profileLevels").innerText = (userData.completedLevels || []).length
 
   // Rang dans le classement
   try{
     let snap = await db.collection("users").orderBy("bestScore","desc").get()
     let rank = 1
     snap.forEach(doc=>{ if(doc.id===currentUser) return; if(doc.data().bestScore > (userData.bestScore||0)) rank++ })
+    snap.forEach(doc=>{ if(doc.id!==currentUser && doc.data().bestScore > (userData.bestScore||0)) rank++ })
     document.getElementById("profileRank").innerText = "Classement mondial : #" + rank
   }catch{}
 }
@@ -1263,6 +806,5 @@ window.addEventListener("load", ()=>{
 })
 
 </script>
-
 </body>
 </html>
