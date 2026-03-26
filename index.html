@@ -309,6 +309,51 @@ canvas{
 .result-score{font-size:28px;color:var(--neon-green);margin:8px 0;}
 .result-sub{font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:20px;}
 
+/* COUNTDOWN OVERLAY */
+#countdownOverlay{
+  position:fixed;inset:0;z-index:50;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(6,10,15,0.75);
+  backdrop-filter:blur(4px);
+  pointer-events:none;
+}
+#countdownOverlay.hidden{display:none!important;}
+#countdownNumber{
+  font-family:'Press Start 2P',monospace;
+  font-size:clamp(60px,15vw,120px);
+  color:var(--neon-green);
+  text-shadow:0 0 40px var(--neon-green),0 0 80px rgba(0,255,136,0.5);
+  animation:cdPop 0.4s ease;
+}
+@keyframes cdPop{0%{transform:scale(1.8);opacity:0}100%{transform:scale(1);opacity:1}}
+
+/* PAUSE OVERLAY */
+#pauseOverlay{
+  position:fixed;inset:0;z-index:50;
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:16px;
+  background:rgba(6,10,15,0.85);
+  backdrop-filter:blur(6px);
+}
+#pauseOverlay.hidden{display:none!important;}
+.pause-title{
+  font-family:'Press Start 2P',monospace;
+  font-size:clamp(18px,4vw,32px);
+  color:var(--neon-blue);
+  text-shadow:0 0 20px var(--neon-blue);
+  margin-bottom:10px;
+}
+/* BOUTON PAUSE INGAME */
+#pauseBtn{
+  position:fixed;top:12px;right:12px;z-index:40;
+  padding:8px 14px;font-size:11px;
+  font-family:'Orbitron',monospace;font-weight:700;
+  background:rgba(0,0,0,0.6);border:1px solid rgba(0,195,255,0.4);
+  color:var(--neon-blue);border-radius:8px;cursor:pointer;
+  transition:all 0.2s;
+}
+#pauseBtn:hover{background:rgba(0,195,255,0.15);}
+
 /* LOADING */
 #loading{
   position:fixed;inset:0;z-index:999;
@@ -416,6 +461,21 @@ canvas{
   </div>
 </div>
 
+<!-- COUNTDOWN OVERLAY -->
+<div id="countdownOverlay" class="hidden">
+  <div id="countdownNumber">3</div>
+</div>
+
+<!-- PAUSE OVERLAY -->
+<div id="pauseOverlay" class="hidden">
+  <div class="pause-title">⏸ PAUSE</div>
+  <button class="btn btn-primary" onclick="resumeGame()">▶ Reprendre</button>
+  <button class="btn btn-danger" onclick="quitToMenu()">⌂ Quitter la partie</button>
+</div>
+
+<!-- BOUTON PAUSE INGAME -->
+<button id="pauseBtn" class="hidden" onclick="togglePause()">⏸ PAUSE</button>
+
 <!-- GAME OVER -->
 <div id="screenGameover" class="screen hidden">
   <div class="result-icon">💀</div>
@@ -492,7 +552,6 @@ const db = firebase.firestore();
 let currentUser = null
 let userData = null
 let sessionFruits = 0
-let sessionStart = Date.now()
 
 let canvas = document.getElementById("canvas")
 let ctx = canvas.getContext("2d")
@@ -503,6 +562,11 @@ let mode = "classic"
 let level = 1
 let levelGoal = 10
 let snakeColor = "lime"
+let isPaused = false
+
+// BUG 3 FIX : buffer de direction pour éviter le demi-tour sur la même frame
+let nextDx, nextDy
+let directionChanged = false
 
 let colors = ["lime","cyan","orange","yellow","pink","purple","red","#00c3ff","gold","white"]
 
@@ -521,7 +585,6 @@ async function register(){
   let user = document.getElementById("regUser").value.trim()
   let pass = document.getElementById("regPass").value
   let pass2 = document.getElementById("regPass2").value
-  let msg = document.getElementById("regMsg")
 
   if(!user || user.length < 3){ setMsg("regMsg","Pseudo trop court (min 3 caractères)","error"); return }
   if(pass.length < 4){ setMsg("regMsg","Mot de passe trop court (min 4 caractères)","error"); return }
@@ -538,6 +601,8 @@ async function register(){
       bestScore: 0,
       totalFruits: 0,
       levelsCompleted: 0,
+      // BUG 2 FIX : niveaux stockés dans Firebase, pas localStorage
+      completedLevels: [],
       createdAt: Date.now()
     })
 
@@ -552,7 +617,6 @@ async function register(){
 async function login(){
   let user = document.getElementById("loginUser").value.trim()
   let pass = document.getElementById("loginPass").value
-  let msg = document.getElementById("loginMsg")
 
   if(!user || !pass){ setMsg("loginMsg","Remplis tous les champs","error"); return }
 
@@ -588,40 +652,50 @@ async function loadUserData(){
   if(!currentUser) return
   let doc = await db.collection("users").doc(currentUser).get()
   userData = doc.data()
+  // Compatibilité anciens comptes sans completedLevels
+  if(!userData.completedLevels) userData.completedLevels = []
 }
 
-async function saveData(){
+// BUG 2 FIX : vérifie si un niveau est complété via Firebase (userData)
+function isLevelCompleted(lvl){
+  if(!userData || !userData.completedLevels) return false
+  return userData.completedLevels.includes(lvl)
+}
+
+async function saveData(levelCompleted){
   if(!currentUser || !userData) return
   try{
     let doc = await db.collection("users").doc(currentUser).get()
     let d = doc.data()
-    let levelsNow = countCompletedLevels()
 
-    await db.collection("users").doc(currentUser).update({
-      bestScore: Math.max(d.bestScore, score),
-      totalFruits: d.totalFruits + sessionFruits,
-      levelsCompleted: Math.max(d.levelsCompleted || 0, levelsNow)
-    })
+    let updateObj = {
+      bestScore: Math.max(d.bestScore || 0, score),
+      totalFruits: (d.totalFruits || 0) + sessionFruits,
+    }
+
+    // BUG 2 FIX : sauvegarder le niveau complété dans Firebase
+    if(levelCompleted){
+      let arr = d.completedLevels || []
+      if(!arr.includes(levelCompleted)) arr.push(levelCompleted)
+      updateObj.completedLevels = arr
+      updateObj.levelsCompleted = arr.length
+    }
+
+    await db.collection("users").doc(currentUser).update(updateObj)
     await loadUserData()
   }catch(e){ console.error("saveData:", e) }
-}
-
-function countCompletedLevels(){
-  let count = 0
-  for(let i=1;i<=10;i++){ if(localStorage.getItem("level"+i)) count++ }
-  return count
 }
 
 /* ===== START APP ===== */
 function startApp(){
   sessionFruits = 0
-  sessionStart = Date.now()
   updateBestScoreDisplay()
   showScreen('screenMenu')
 }
 
+// BUG 1 FIX : mise à jour du best score menu à chaque retour
 function updateBestScoreDisplay(){
-  let best = userData ? userData.bestScore : 0
+  let best = userData ? (userData.bestScore || 0) : 0
   document.getElementById("bestScore").innerText = "🏆 Meilleur score : " + best
   document.getElementById("bestInGame").innerText = best
 }
@@ -631,10 +705,10 @@ function updateAdventureUI(){
   let container = document.getElementById("levels")
   container.innerHTML = ""
   for(let i=1;i<=10;i++){
+    let done = isLevelCompleted(i)  // BUG 2 FIX : utilise Firebase
     let div = document.createElement("div")
-    div.className = "level-card"
-    if(localStorage.getItem("level"+i)) div.classList.add("completed")
-    div.innerHTML = `<div class="level-num">${localStorage.getItem("level"+i)?"✅":"🔹"} Niveau ${i}</div><div class="level-goal">Objectif : ${i*10} pts</div>`
+    div.className = "level-card" + (done ? " completed" : "")
+    div.innerHTML = `<div class="level-num">${done?"✅":"🔹"} Niveau ${i}</div><div class="level-goal">Objectif : ${i*10} pts</div>`
     div.onclick = () => startAdventure(i)
     container.appendChild(div)
   }
@@ -661,7 +735,10 @@ function startAdventure(lvl){
 
 function startGame(){
   sessionFruits = 0
+  isPaused = false
   showScreen('screenGame')
+
+  document.getElementById("pauseBtn").classList.remove("hidden")
 
   let obj = document.getElementById("objectiveTag")
   if(mode === "adventure"){
@@ -673,12 +750,84 @@ function startGame(){
 
   snake = [{x:200,y:200}]
   food = randomFood()
-  dx = gridSize; dy = 0; score = 0
+  dx = gridSize; dy = 0
+  nextDx = gridSize; nextDy = 0
+  directionChanged = false
+  score = 0
 
   document.getElementById("scoreDisplay").innerText = "0"
+  updateBestScoreDisplay()
 
   clearInterval(interval)
-  interval = setInterval(loop, 130)
+
+  // COUNTDOWN avant de lancer
+  startCountdown(() => {
+    interval = setInterval(loop, 130)
+  })
+}
+
+/* ===== COUNTDOWN ===== */
+function startCountdown(callback){
+  let overlay = document.getElementById("countdownOverlay")
+  let numEl = document.getElementById("countdownNumber")
+  overlay.classList.remove("hidden")
+
+  let count = 3
+  numEl.textContent = count
+
+  let timer = setInterval(()=>{
+    count--
+    if(count === 0){
+      numEl.textContent = "GO !"
+      numEl.style.color = "var(--neon-gold)"
+      numEl.style.textShadow = "0 0 40px var(--neon-gold)"
+    } else if(count < 0){
+      clearInterval(timer)
+      overlay.classList.add("hidden")
+      numEl.style.color = "var(--neon-green)"
+      numEl.style.textShadow = "0 0 40px var(--neon-green)"
+      callback()
+    } else {
+      // Force re-animation
+      numEl.style.animation = "none"
+      numEl.offsetHeight // reflow
+      numEl.style.animation = "cdPop 0.4s ease"
+      numEl.textContent = count
+    }
+  }, 900)
+}
+
+/* ===== PAUSE ===== */
+function togglePause(){
+  if(isPaused) resumeGame()
+  else pauseGame()
+}
+
+function pauseGame(){
+  if(isPaused) return
+  isPaused = true
+  clearInterval(interval)
+  document.getElementById("pauseOverlay").classList.remove("hidden")
+}
+
+function resumeGame(){
+  document.getElementById("pauseOverlay").classList.add("hidden")
+  isPaused = false
+  // Countdown avant de reprendre
+  startCountdown(()=>{
+    interval = setInterval(loop, 130)
+  })
+}
+
+function quitToMenu(){
+  clearInterval(interval)
+  isPaused = false
+  document.getElementById("pauseOverlay").classList.add("hidden")
+  document.getElementById("pauseBtn").classList.add("hidden")
+  document.getElementById("countdownOverlay").classList.add("hidden")
+  showScreen('screenMenu')
+  // BUG 1 FIX : on recharge les données pour avoir le bon best score
+  loadUserData().then(updateBestScoreDisplay)
 }
 
 function randomFood(){
@@ -689,42 +838,62 @@ function randomFood(){
   }
 }
 
-document.addEventListener("keydown", direction)
+/* ===== CONTROLS ===== */
+document.addEventListener("keydown", e => {
+  // Pause avec Échap
+  if(e.key === "Escape"){
+    let gameVisible = !document.getElementById("screenGame").classList.contains("hidden")
+    if(gameVisible) togglePause()
+    return
+  }
+  handleDirection(e.key)
+})
 
-function direction(e){
-  if((e.key==="ArrowUp"||e.key==="w") && dy===0){dx=0;dy=-gridSize}
-  if((e.key==="ArrowDown"||e.key==="s") && dy===0){dx=0;dy=gridSize}
-  if((e.key==="ArrowLeft"||e.key==="a") && dx===0){dx=-gridSize;dy=0}
-  if((e.key==="ArrowRight"||e.key==="d") && dx===0){dx=gridSize;dy=0}
+// BUG 3 FIX : buffer de direction — on stocke la prochaine direction, appliquée seulement au prochain tick
+function handleDirection(key){
+  if(isPaused) return
+  if((key==="ArrowUp"||key==="w") && dy===0 && nextDy===0){ nextDx=0; nextDy=-gridSize }
+  if((key==="ArrowDown"||key==="s") && dy===0 && nextDy===0){ nextDx=0; nextDy=gridSize }
+  if((key==="ArrowLeft"||key==="a") && dx===0 && nextDx===0){ nextDx=-gridSize; nextDy=0 }
+  if((key==="ArrowRight"||key==="d") && dx===0 && nextDx===0){ nextDx=gridSize; nextDy=0 }
 }
 
 function mobileDir(dir){
-  if(dir==="up" && dy===0){dx=0;dy=-gridSize}
-  if(dir==="down" && dy===0){dx=0;dy=gridSize}
-  if(dir==="left" && dx===0){dx=-gridSize;dy=0}
-  if(dir==="right" && dx===0){dx=gridSize;dy=0}
+  if(isPaused) return
+  // BUG 3 FIX : même logique buffer pour mobile
+  if(dir==="up" && dy===0 && nextDy===0){ nextDx=0; nextDy=-gridSize }
+  if(dir==="down" && dy===0 && nextDy===0){ nextDx=0; nextDy=gridSize }
+  if(dir==="left" && dx===0 && nextDx===0){ nextDx=-gridSize; nextDy=0 }
+  if(dir==="right" && dx===0 && nextDx===0){ nextDx=gridSize; nextDy=0 }
 }
 
 let startX=0, startY=0
 canvas.addEventListener("touchstart", e=>{startX=e.touches[0].clientX;startY=e.touches[0].clientY},{passive:true})
 canvas.addEventListener("touchend", e=>{
+  if(isPaused) return
   let diffX = e.changedTouches[0].clientX - startX
   let diffY = e.changedTouches[0].clientY - startY
   if(Math.abs(diffX)>Math.abs(diffY)){
-    if(diffX>0 && dx===0){dx=gridSize;dy=0}
-    else if(diffX<0 && dx===0){dx=-gridSize;dy=0}
+    if(diffX>0 && dx===0 && nextDx===0){nextDx=gridSize;nextDy=0}
+    else if(diffX<0 && dx===0 && nextDx===0){nextDx=-gridSize;nextDy=0}
   }else{
-    if(diffY>0 && dy===0){dx=0;dy=gridSize}
-    else if(diffY<0 && dy===0){dx=0;dy=-gridSize}
+    if(diffY>0 && dy===0 && nextDy===0){nextDx=0;nextDy=gridSize}
+    else if(diffY<0 && dy===0 && nextDy===0){nextDx=0;nextDy=-gridSize}
   }
 },{passive:true})
 
+/* ===== LOOP ===== */
 function loop(){
+  // BUG 3 FIX : appliquer la direction bufferisée au début du tick
+  dx = nextDx; dy = nextDy
+  directionChanged = false
+
   let head = {x:snake[0].x+dx, y:snake[0].y+dy}
 
   if(head.x<0||head.y<0||head.x>=400||head.y>=400){gameOver();return}
-  for(let part of snake){
-    if(head.x===part.x && head.y===part.y){gameOver();return}
+  // BUG 3 FIX : on vérifie seulement à partir de l'index 1 (pas la tête elle-même)
+  for(let i=1; i<snake.length; i++){
+    if(head.x===snake[i].x && head.y===snake[i].y){gameOver();return}
   }
 
   snake.unshift(head)
@@ -736,7 +905,7 @@ function loop(){
 
     document.getElementById("scoreDisplay").innerText = score
 
-    let best = userData ? userData.bestScore : 0
+    let best = userData ? (userData.bestScore || 0) : 0
     if(score > best){
       document.getElementById("bestInGame").innerText = score
     }
@@ -758,13 +927,11 @@ function loop(){
   ctx.fillStyle="#0a0f0a"
   ctx.fillRect(0,0,400,400)
 
-  // Grille discrète
   ctx.strokeStyle = "rgba(0,255,136,0.03)"
   ctx.lineWidth = 1
   for(let x=0;x<400;x+=gridSize){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,400);ctx.stroke()}
   for(let y=0;y<400;y+=gridSize){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(400,y);ctx.stroke()}
 
-  // Nourriture
   if(food.gold){
     try{ctx.drawImage(goldenAppleImg,food.x,food.y,gridSize,gridSize)}catch{
       ctx.fillStyle="gold";ctx.fillRect(food.x,food.y,gridSize,gridSize)
@@ -775,14 +942,12 @@ function loop(){
     }
   }
 
-  // Serpent
   snake.forEach((p,i)=>{
     if(i===0){
       ctx.fillStyle = snakeColor
       ctx.fillRect(p.x,p.y,gridSize,gridSize)
       try{ctx.drawImage(snakeHeadImg,p.x,p.y,gridSize,gridSize)}catch{}
     }else{
-      // Corps avec effet de dégradé
       let alpha = Math.max(0.4, 1 - i/snake.length * 0.6)
       ctx.globalAlpha = alpha
       ctx.fillStyle = snakeColor
@@ -794,17 +959,20 @@ function loop(){
 
 async function gameOver(){
   clearInterval(interval)
-  await saveData()
-  let best = userData ? userData.bestScore : 0
+  document.getElementById("pauseBtn").classList.add("hidden")
+  await saveData(null)
+  // BUG 1 FIX : recharger userData pour afficher le bon best score dans le menu ensuite
+  let best = userData ? (userData.bestScore || 0) : 0
   document.getElementById("goScore").innerText = "Score : " + score
-  document.getElementById("goSub").innerText = score >= best ? "🎉 Nouveau record !" : "Meilleur : " + best
+  document.getElementById("goSub").innerText = score > best ? "🎉 Nouveau record !" : "Meilleur : " + Math.max(best, score)
   showScreen('screenGameover')
 }
 
 async function winLevel(){
   clearInterval(interval)
-  localStorage.setItem("level"+level, true)
-  await saveData()
+  document.getElementById("pauseBtn").classList.add("hidden")
+  // BUG 2 FIX : sauvegarde le niveau dans Firebase
+  await saveData(level)
   document.getElementById("winScore").innerText = "Score : " + score
   document.getElementById("winSub").innerText = "Niveau " + level + " complété !"
   showScreen('screenWin')
@@ -812,7 +980,7 @@ async function winLevel(){
 
 function nextLevel(){
   level++
-  if(level>10){showScreen('screenMenu');return}
+  if(level>10){ showScreen('screenMenu'); loadUserData().then(updateBestScoreDisplay); return }
   startAdventure(level)
 }
 
@@ -820,6 +988,24 @@ function restartLevel(){
   if(mode==="adventure") startAdventure(level)
   else startClassic()
 }
+
+/* ===== RETOUR MENU (BUG 1 FIX) ===== */
+// On surcharge showScreen pour que le menu recharge toujours le best score
+const _origShowScreen = showScreen
+function goToMenu(){
+  document.getElementById("pauseBtn").classList.add("hidden")
+  document.getElementById("pauseOverlay").classList.add("hidden")
+  document.getElementById("countdownOverlay").classList.add("hidden")
+  clearInterval(interval)
+  showScreen('screenMenu')
+  // BUG 1 FIX : rafraîchir best score à chaque retour menu
+  loadUserData().then(updateBestScoreDisplay)
+}
+
+// Rediriger les boutons "⌂ Menu" des écrans gameover/win vers goToMenu
+document.querySelectorAll('[onclick="showScreen(\'screenMenu\')"]').forEach(btn=>{
+  btn.setAttribute('onclick','goToMenu()')
+})
 
 /* ===== LEADERBOARD ===== */
 async function showLeaderboard(){
@@ -862,13 +1048,12 @@ async function showProfile(){
   document.getElementById("profileName").innerText = currentUser
   document.getElementById("profileBest").innerText = userData.bestScore || 0
   document.getElementById("profileFruits").innerText = userData.totalFruits || 0
-  document.getElementById("profileLevels").innerText = userData.levelsCompleted || 0
+  document.getElementById("profileLevels").innerText = (userData.completedLevels || []).length
 
-  // Rang dans le classement
   try{
     let snap = await db.collection("users").orderBy("bestScore","desc").get()
     let rank = 1
-    snap.forEach(doc=>{ if(doc.id===currentUser) return; if(doc.data().bestScore > (userData.bestScore||0)) rank++ })
+    snap.forEach(doc=>{ if(doc.id!==currentUser && doc.data().bestScore > (userData.bestScore||0)) rank++ })
     document.getElementById("profileRank").innerText = "Classement mondial : #" + rank
   }catch{}
 }
