@@ -1077,7 +1077,7 @@ function getFoodPts(f){
 function resetSnake(){
   let hx = snake[0].x, hy = snake[0].y
   snake = [{x:hx, y:hy}]
-  speedMultiplier *= 1.5
+  speedMultiplier *= 1.1
   canvas.classList.remove('reset-flash')
   void canvas.offsetWidth
   canvas.classList.add('reset-flash')
