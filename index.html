@@ -502,6 +502,7 @@ let level = 1
 let levelGoal = 10
 let snakeColor = "lime"
 let isPaused = false
+let isCountingDown = false  // bloque la pause pendant le countdown
 let speedMultiplier = 1
 const BASE_INTERVAL = 130
 
@@ -517,6 +518,8 @@ let phantomImg = new Image(); phantomImg.src = "phantom.png"
 let clockImg = new Image(); clockImg.src = "clock.png"
 let fruitRainImg = new Image(); fruitRainImg.src = "fruit_rain.png"
 let starImg = new Image(); starImg.src = "star.png"
+let diamondImg = new Image(); diamondImg.src = "diamond.png"
+let sladImg = new Image(); sladImg.src = "salad.png"
 
 /* ===== BONUS SYSTEM ===== */
 let bonusOnMap = null
@@ -677,7 +680,7 @@ function startGame(){
   extraFoods = []
   bonusOnMap = null
   // Initialiser food simplement sans dépendre de randomFreeCell
-  food = {x:100, y:100, gold:false}
+  food = {x:100, y:100, type:'normal'}
   dx = gridSize; dy = 0
   nextDx = gridSize; nextDy = 0
   directionChanged = false
@@ -750,6 +753,14 @@ function randomFreeCell(){
   return pos
 }
 
+/* ===== AUTO-PAUSE SI CHANGEMENT D'ONGLET ===== */
+document.addEventListener("visibilitychange", ()=>{
+  if(document.hidden && !isCountingDown){
+    let gameVisible = !document.getElementById("screenGame").classList.contains("hidden")
+    if(gameVisible && !isPaused) pauseGame()
+  }
+})
+
 function randomFood(){
   let cols = 400/gridSize
   let rows = 400/gridSize
@@ -764,7 +775,15 @@ function randomFood(){
     }
     attempts++
   } while(attempts < 200 && occ.some(p => p.x===pos.x && p.y===pos.y))
-  return {x:pos.x, y:pos.y, gold:Math.random()<0.1}
+
+  // Tirage du type de nourriture
+  // 1/20 arc-en-ciel, 1/15 diamant, 1/8 salade, 1/10 dorée, reste normal
+  let r = Math.random()
+  if(r < 1/20)       return {x:pos.x, y:pos.y, type:'rainbow'}
+  else if(r < 1/20 + 1/15) return {x:pos.x, y:pos.y, type:'diamond'}
+  else if(r < 1/20 + 1/15 + 1/8)  return {x:pos.x, y:pos.y, type:'salad'}
+  else if(r < 1/20 + 1/15 + 1/8 + 1/10) return {x:pos.x, y:pos.y, type:'gold'}
+  else                return {x:pos.x, y:pos.y, type:'normal'}
 }
 
 /* ===== ACTIVER BONUS ===== */
@@ -845,6 +864,7 @@ function startCountdown(callback){
   let overlay = document.getElementById("countdownOverlay")
   let numEl = document.getElementById("countdownNumber")
   overlay.classList.remove("hidden")
+  isCountingDown = true
   let count = 3
   numEl.textContent = count
   let timer = setInterval(()=>{
@@ -858,6 +878,7 @@ function startCountdown(callback){
       overlay.classList.add("hidden")
       numEl.style.color = "var(--neon-green)"
       numEl.style.textShadow = "0 0 40px var(--neon-green)"
+      isCountingDown = false
       callback()
     } else {
       numEl.style.animation = "none"
@@ -872,15 +893,46 @@ function startCountdown(callback){
 function togglePause(){ if(isPaused) resumeGame(); else pauseGame() }
 
 function pauseGame(){
-  if(isPaused) return
+  if(isPaused || isCountingDown) return  // bloqué pendant countdown
   isPaused = true
   clearInterval(interval)
+  // Pause tous les timers de bonus (on sauvegarde le temps restant via effectCountdowns)
+  clearInterval(rainInterval)
+  // Pause le despawn du bonus sur la map
+  clearTimeout(bonusDespawnTimer)
+  // Pause les countdowns d'effets
+  Object.keys(effectCDIntervals).forEach(k => clearInterval(effectCDIntervals[k]))
   document.getElementById("pauseOverlay").classList.remove("hidden")
 }
 
 function resumeGame(){
   document.getElementById("pauseOverlay").classList.add("hidden")
   isPaused = false
+  // Relancer les countdowns d'effets actifs avec le temps restant
+  Object.keys(effectCountdowns).forEach(name => {
+    if(!activeEffects[name]) return
+    effectCDIntervals[name] = setInterval(()=>{
+      effectCountdowns[name]--
+      updateBonusBar()
+      if(effectCountdowns[name] <= 0) clearInterval(effectCDIntervals[name])
+    }, 1000)
+  })
+  // Relancer la pluie si active
+  if(activeEffects.rain && !rainInterval){
+    rainInterval = setInterval(()=>{
+      if(extraFoods.length < 10){
+        let p = randomFreeCell()
+        extraFoods.push({x:p.x, y:p.y, gold:Math.random()<0.2})
+      }
+    }, 1000)
+  }
+  // Relancer le despawn du bonus sur la map avec le temps restant approximatif
+  if(bonusOnMap){
+    bonusDespawnTimer = setTimeout(()=>{
+      bonusOnMap = null
+      scheduleBonusSpawn()
+    }, (effectCountdowns['_bonusMap'] || 5) * 1000)
+  }
   startCountdown(()=>{ interval = setInterval(loop, getSpeed()) })
 }
 
@@ -898,6 +950,7 @@ function quitToMenu(){
 /* ===== CONTROLS ===== */
 document.addEventListener("keydown", e => {
   if(e.key === "Escape"){
+    if(isCountingDown) return  // pas de pause pendant countdown
     let gameVisible = !document.getElementById("screenGame").classList.contains("hidden")
     if(gameVisible) togglePause()
     return
@@ -966,8 +1019,10 @@ function loop(){
 
   // Nourriture principale
   if(head.x===food.x && head.y===food.y){
-    let pts = (food.gold ? 3 : 1) * (activeEffects.star ? 2 : 1)
+    let pts = getFoodPts(food) * (activeEffects.star ? 2 : 1)
     score += pts; sessionFruits += pts
+    // Salade : réduit la queue
+    if(food.type === 'salad' && snake.length > 1) snake.pop()
     food = randomFood()
     ate = true
   }
@@ -976,7 +1031,7 @@ function loop(){
   for(let i=extraFoods.length-1; i>=0; i--){
     let ef = extraFoods[i]
     if(head.x===ef.x && head.y===ef.y){
-      let pts = (ef.gold ? 3 : 1) * (activeEffects.star ? 2 : 1)
+      let pts = getFoodPts(ef) * (activeEffects.star ? 2 : 1)
       score += pts; sessionFruits += pts
       extraFoods.splice(i,1)
       ate = true
@@ -1007,6 +1062,15 @@ function loop(){
   if(snake.length >= 100) resetSnake()
 
   draw()
+}
+
+/* ===== POINTS PAR NOURRITURE ===== */
+function getFoodPts(f){
+  if(f.type==='gold')    return 3
+  if(f.type==='diamond') return 5
+  if(f.type==='rainbow') return 10
+  if(f.type==='salad')   return 1
+  return 1  // normal
 }
 
 /* ===== RESET QUEUE 100 ===== */
@@ -1069,8 +1133,53 @@ function draw(){
 }
 
 function drawFood(f){
-  try{ ctx.drawImage(f.gold ? goldenAppleImg : appleImg, f.x, f.y, gridSize, gridSize) }
-  catch{ ctx.fillStyle=f.gold?"gold":"#ff4444"; ctx.fillRect(f.x,f.y,gridSize,gridSize) }
+  if(f.type === 'rainbow'){
+    // Arc-en-ciel animé pur canvas - pas besoin d'image
+    let t = Date.now() / 300
+    let grad = ctx.createLinearGradient(f.x, f.y, f.x+gridSize, f.y+gridSize)
+    grad.addColorStop(0,   `hsl(${(t*60)%360},100%,60%)`)
+    grad.addColorStop(0.33,`hsl(${(t*60+120)%360},100%,60%)`)
+    grad.addColorStop(0.66,`hsl(${(t*60+240)%360},100%,60%)`)
+    grad.addColorStop(1,   `hsl(${(t*60+360)%360},100%,60%)`)
+    ctx.fillStyle = grad
+    ctx.beginPath()
+    ctx.roundRect(f.x+1, f.y+1, gridSize-2, gridSize-2, 4)
+    ctx.fill()
+    // Brillance pulsée
+    ctx.save()
+    ctx.globalAlpha = 0.4 + 0.3*Math.sin(Date.now()/150)
+    ctx.fillStyle = 'white'
+    ctx.beginPath()
+    ctx.arc(f.x+gridSize*0.3, f.y+gridSize*0.3, 2, 0, Math.PI*2)
+    ctx.fill()
+    ctx.restore()
+  } else if(f.type === 'diamond'){
+    try{ ctx.drawImage(diamondImg, f.x, f.y, gridSize, gridSize) }
+    catch{
+      // Fallback : losange cyan
+      ctx.fillStyle = '#00eeff'
+      ctx.save()
+      ctx.translate(f.x+gridSize/2, f.y+gridSize/2)
+      ctx.rotate(Math.PI/4)
+      ctx.fillRect(-gridSize*0.35, -gridSize*0.35, gridSize*0.7, gridSize*0.7)
+      ctx.restore()
+    }
+  } else if(f.type === 'salad'){
+    try{ ctx.drawImage(sladImg, f.x, f.y, gridSize, gridSize) }
+    catch{
+      // Fallback : carré vert salade
+      ctx.fillStyle = '#7ec850'
+      ctx.fillRect(f.x+1, f.y+1, gridSize-2, gridSize-2)
+    }
+  } else if(f.type === 'gold'){
+    try{ ctx.drawImage(goldenAppleImg, f.x, f.y, gridSize, gridSize) }
+    catch{ ctx.fillStyle='gold'; ctx.fillRect(f.x,f.y,gridSize,gridSize) }
+  } else {
+    // normal (et fallback pour extra foods sans type)
+    let isGold = f.gold === true
+    try{ ctx.drawImage(isGold ? goldenAppleImg : appleImg, f.x, f.y, gridSize, gridSize) }
+    catch{ ctx.fillStyle=isGold?"gold":"#ff4444"; ctx.fillRect(f.x,f.y,gridSize,gridSize) }
+  }
 }
 
 function drawBonusItem(b){
