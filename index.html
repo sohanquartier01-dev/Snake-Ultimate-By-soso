@@ -4,191 +4,43 @@
 <title>Snake Ultimate</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
-
-<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 <style>
-:root{
-  --neon-green:#00ff88;
-  --neon-blue:#00c3ff;
-  --neon-pink:#ff0080;
-  --neon-gold:#ffd700;
-  --bg-dark:#060a0f;
-  --bg-card:rgba(0,255,136,0.04);
-  --border-neon:rgba(0,255,136,0.25);
-}
-
+:root{--neon-green:#00ff88;--neon-blue:#00c3ff;--neon-pink:#ff0080;--neon-gold:#ffd700;--bg-dark:#060a0f;--bg-card:rgba(0,255,136,0.04);--border-neon:rgba(0,255,136,0.25);}
 *{box-sizing:border-box;margin:0;padding:0;}
-
-body{
-  background:var(--bg-dark);
-  color:white;
-  font-family:'Orbitron',monospace;
-  text-align:center;
-  overflow:hidden;
-  min-height:100vh;
-  position:relative;
-}
-
-body::before{
-  content:'';
-  position:fixed;
-  inset:0;
-  background-image:
-    linear-gradient(rgba(0,255,136,0.03) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(0,255,136,0.03) 1px,transparent 1px);
-  background-size:40px 40px;
-  pointer-events:none;
-  z-index:0;
-}
-
-body::after{
-  content:'';
-  position:fixed;
-  top:-200px;left:50%;
-  transform:translateX(-50%);
-  width:600px;height:600px;
-  background:radial-gradient(circle,rgba(0,255,136,0.06) 0%,transparent 70%);
-  pointer-events:none;
-  z-index:0;
-}
-
-.screen{
-  position:relative;z-index:1;
-  display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-  min-height:100vh;padding:20px;
-}
-
-.main-title{
-  font-family:'Press Start 2P',monospace;
-  font-size:clamp(20px,4vw,42px);
-  color:var(--neon-green);
-  text-shadow:0 0 20px var(--neon-green),0 0 60px rgba(0,255,136,0.4);
-  margin-bottom:8px;
-  animation:titlePulse 3s ease-in-out infinite;
-}
-
-@keyframes titlePulse{
-  0%,100%{text-shadow:0 0 20px var(--neon-green),0 0 60px rgba(0,255,136,0.4);}
-  50%{text-shadow:0 0 40px var(--neon-green),0 0 100px rgba(0,255,136,0.7),0 0 140px rgba(0,255,136,0.3);}
-}
-
-.subtitle{
-  font-size:10px;
-  color:rgba(0,255,136,0.5);
-  letter-spacing:6px;
-  margin-bottom:40px;
-  text-transform:uppercase;
-}
-
-.card{
-  background:var(--bg-card);
-  border:1px solid var(--border-neon);
-  border-radius:12px;
-  padding:30px;
-  width:100%;max-width:380px;
-  backdrop-filter:blur(10px);
-  box-shadow:0 0 40px rgba(0,255,136,0.05),inset 0 1px 0 rgba(255,255,255,0.05);
-}
-
-input{
-  width:100%;
-  padding:12px 16px;
-  margin:8px 0;
-  background:rgba(0,0,0,0.4);
-  border:1px solid rgba(0,255,136,0.2);
-  border-radius:8px;
-  color:white;
-  font-family:'Orbitron',monospace;
-  font-size:13px;
-  outline:none;
-  transition:border-color 0.2s,box-shadow 0.2s;
-}
-
+body{background:var(--bg-dark);color:white;font-family:'Orbitron',monospace;text-align:center;overflow:hidden;min-height:100vh;position:relative;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,255,136,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,136,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+body::after{content:'';position:fixed;top:-200px;left:50%;transform:translateX(-50%);width:600px;height:600px;background:radial-gradient(circle,rgba(0,255,136,0.06) 0%,transparent 70%);pointer-events:none;z-index:0;}
+.screen{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
+.main-title{font-family:'Press Start 2P',monospace;font-size:clamp(20px,4vw,42px);color:var(--neon-green);text-shadow:0 0 20px var(--neon-green),0 0 60px rgba(0,255,136,0.4);margin-bottom:8px;animation:titlePulse 3s ease-in-out infinite;}
+@keyframes titlePulse{0%,100%{text-shadow:0 0 20px var(--neon-green),0 0 60px rgba(0,255,136,0.4);}50%{text-shadow:0 0 40px var(--neon-green),0 0 100px rgba(0,255,136,0.7),0 0 140px rgba(0,255,136,0.3);}}
+.subtitle{font-size:10px;color:rgba(0,255,136,0.5);letter-spacing:6px;margin-bottom:40px;text-transform:uppercase;}
+.card{background:var(--bg-card);border:1px solid var(--border-neon);border-radius:12px;padding:30px;width:100%;max-width:420px;backdrop-filter:blur(10px);box-shadow:0 0 40px rgba(0,255,136,0.05),inset 0 1px 0 rgba(255,255,255,0.05);}
+input,select{width:100%;padding:12px 16px;margin:8px 0;background:rgba(0,0,0,0.4);border:1px solid rgba(0,255,136,0.2);border-radius:8px;color:white;font-family:'Orbitron',monospace;font-size:13px;outline:none;transition:border-color 0.2s,box-shadow 0.2s;}
 input::placeholder{color:rgba(255,255,255,0.25);}
-input:focus{
-  border-color:var(--neon-green);
-  box-shadow:0 0 15px rgba(0,255,136,0.2);
-}
-
-.btn{
-  padding:12px 24px;
-  font-size:12px;
-  font-family:'Orbitron',monospace;
-  font-weight:700;
-  margin:6px;
-  cursor:pointer;
-  border:none;
-  border-radius:8px;
-  transition:all 0.2s;
-  letter-spacing:1px;
-  text-transform:uppercase;
-  position:relative;
-  overflow:hidden;
-}
-
-.btn-primary{
-  background:linear-gradient(135deg,var(--neon-green),#00a855);
-  color:#060a0f;
-  box-shadow:0 4px 20px rgba(0,255,136,0.3);
-}
+input:focus,select:focus{border-color:var(--neon-green);box-shadow:0 0 15px rgba(0,255,136,0.2);}
+select option{background:#0a1520;color:white;}
+.btn{padding:12px 24px;font-size:12px;font-family:'Orbitron',monospace;font-weight:700;margin:6px;cursor:pointer;border:none;border-radius:8px;transition:all 0.2s;letter-spacing:1px;text-transform:uppercase;position:relative;overflow:hidden;}
+.btn-primary{background:linear-gradient(135deg,var(--neon-green),#00a855);color:#060a0f;box-shadow:0 4px 20px rgba(0,255,136,0.3);}
 .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,255,136,0.5);}
-
-.btn-secondary{
-  background:transparent;
-  color:var(--neon-green);
-  border:1px solid var(--neon-green);
-  box-shadow:0 0 10px rgba(0,255,136,0.1);
-}
+.btn-secondary{background:transparent;color:var(--neon-green);border:1px solid var(--neon-green);box-shadow:0 0 10px rgba(0,255,136,0.1);}
 .btn-secondary:hover{background:rgba(0,255,136,0.1);box-shadow:0 0 20px rgba(0,255,136,0.3);}
-
 .btn-danger{background:linear-gradient(135deg,var(--neon-pink),#aa0055);color:white;}
 .btn-gold{background:linear-gradient(135deg,var(--neon-gold),#cc8800);color:#060a0f;}
-
+.btn-blue{background:linear-gradient(135deg,var(--neon-blue),#0077aa);color:#060a0f;}
 .msg{font-size:11px;margin-top:10px;padding:8px;border-radius:6px;min-height:20px;}
 .msg.error{color:var(--neon-pink);background:rgba(255,0,128,0.08);border:1px solid rgba(255,0,128,0.2);}
 .msg.success{color:var(--neon-green);background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.2);}
-
 .divider{display:flex;align-items:center;gap:10px;margin:16px 0;color:rgba(255,255,255,0.2);font-size:10px;}
 .divider::before,.divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.1);}
-
 .menu-buttons{display:flex;flex-direction:column;gap:10px;width:100%;max-width:280px;}
-
-.score-bar{
-  display:flex;justify-content:space-between;align-items:center;
-  width:100%;max-width:440px;
-  padding:10px 16px;
-  background:rgba(0,0,0,0.5);
-  border:1px solid var(--border-neon);
-  border-radius:8px;
-  margin-bottom:6px;
-  font-size:11px;
-}
+.score-bar{display:flex;justify-content:space-between;align-items:center;width:100%;max-width:440px;padding:10px 16px;background:rgba(0,0,0,0.5);border:1px solid var(--border-neon);border-radius:8px;margin-bottom:6px;font-size:11px;}
 .score-val{color:var(--neon-green);font-weight:700;font-size:16px;}
-.objective-tag{
-  font-size:9px;padding:4px 10px;
-  background:rgba(0,195,255,0.1);
-  border:1px solid rgba(0,195,255,0.3);
-  border-radius:20px;color:var(--neon-blue);
-}
-
-/* BONUS BAR */
-#bonusBar{
-  display:flex;gap:8px;align-items:center;justify-content:center;
-  width:100%;max-width:440px;
-  min-height:32px;
-  margin-bottom:6px;
-  flex-wrap:wrap;
-}
-.bonus-ind{
-  display:flex;align-items:center;gap:5px;
-  padding:4px 10px;border-radius:20px;
-  font-size:10px;font-weight:700;border:1px solid;
-  animation:bpop 0.3s ease;
-}
+.objective-tag{font-size:9px;padding:4px 10px;background:rgba(0,195,255,0.1);border:1px solid rgba(0,195,255,0.3);border-radius:20px;color:var(--neon-blue);}
+#bonusBar{display:flex;gap:8px;align-items:center;justify-content:center;width:100%;max-width:440px;min-height:32px;margin-bottom:6px;flex-wrap:wrap;}
+.bonus-ind{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:10px;font-weight:700;border:1px solid;animation:bpop 0.3s ease;}
 @keyframes bpop{0%{transform:scale(0);opacity:0}70%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
 .b-phantom{color:#a78bfa;border-color:rgba(167,139,250,0.5);background:rgba(167,139,250,0.08);}
 .b-clockFast{color:#f97316;border-color:rgba(249,115,22,0.5);background:rgba(249,115,22,0.08);}
@@ -196,53 +48,23 @@ input:focus{
 .b-rain{color:#34d399;border-color:rgba(52,211,153,0.5);background:rgba(52,211,153,0.08);}
 .b-star{color:var(--neon-gold);border-color:rgba(255,215,0,0.6);background:rgba(255,215,0,0.1);}
 .btimer{font-size:12px;font-weight:900;}
-
-canvas{
-  background:#0a0f0a;
-  border:2px solid rgba(0,255,136,0.3);
-  border-radius:8px;
-  box-shadow:0 0 30px rgba(0,255,136,0.1),0 0 60px rgba(0,255,136,0.05);
-  max-width:90vw;max-height:50vh;
-  display:block;
-}
-
-@keyframes rainbow{
-  0%{box-shadow:0 0 30px #ff0000,0 0 60px rgba(255,0,0,0.3);}
-  16%{box-shadow:0 0 30px #ff8800,0 0 60px rgba(255,136,0,0.3);}
-  33%{box-shadow:0 0 30px #ffff00,0 0 60px rgba(255,255,0,0.3);}
-  50%{box-shadow:0 0 30px #00ff00,0 0 60px rgba(0,255,0,0.3);}
-  66%{box-shadow:0 0 30px #0088ff,0 0 60px rgba(0,136,255,0.3);}
-  83%{box-shadow:0 0 30px #8800ff,0 0 60px rgba(136,0,255,0.3);}
-  100%{box-shadow:0 0 30px #ff0000,0 0 60px rgba(255,0,0,0.3);}
-}
+canvas{background:#0a0f0a;border:2px solid rgba(0,255,136,0.3);border-radius:8px;box-shadow:0 0 30px rgba(0,255,136,0.1),0 0 60px rgba(0,255,136,0.05);max-width:90vw;max-height:50vh;display:block;}
+@keyframes rainbow{0%{box-shadow:0 0 30px #ff0000,0 0 60px rgba(255,0,0,0.3);}16%{box-shadow:0 0 30px #ff8800,0 0 60px rgba(255,136,0,0.3);}33%{box-shadow:0 0 30px #ffff00,0 0 60px rgba(255,255,0,0.3);}50%{box-shadow:0 0 30px #00ff00,0 0 60px rgba(0,255,0,0.3);}66%{box-shadow:0 0 30px #0088ff,0 0 60px rgba(0,136,255,0.3);}83%{box-shadow:0 0 30px #8800ff,0 0 60px rgba(136,0,255,0.3);}100%{box-shadow:0 0 30px #ff0000,0 0 60px rgba(255,0,0,0.3);}}
 canvas.star-active{animation:rainbow 0.5s linear infinite;}
-
-@keyframes resetFlash{
-  0%,100%{border-color:rgba(0,255,136,0.3);}
-  50%{border-color:#fff;box-shadow:0 0 50px white;}
-}
+@keyframes resetFlash{0%,100%{border-color:rgba(0,255,136,0.3);}50%{border-color:#fff;box-shadow:0 0 50px white;}}
 canvas.reset-flash{animation:resetFlash 0.4s ease 3;}
-
 #mobileControls{display:none;margin-top:15px;}
 #mobileControls .btn{font-size:22px;padding:12px 18px;margin:3px;}
 @media(max-width:768px){#mobileControls{display:block;}}
-
-.levels-grid{
-  display:grid;grid-template-columns:1fr 1fr;
-  gap:8px;width:100%;max-width:380px;
-  max-height:55vh;overflow-y:auto;padding-right:4px;
-}
+.levels-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;max-width:380px;max-height:55vh;overflow-y:auto;padding-right:4px;}
 .levels-grid::-webkit-scrollbar{width:4px;}
-.levels-grid::-webkit-scrollbar-track{background:transparent;}
 .levels-grid::-webkit-scrollbar-thumb{background:var(--neon-green);border-radius:4px;}
-
 .level-card{padding:12px;background:rgba(0,0,0,0.3);border:1px solid rgba(0,255,136,0.15);border-radius:8px;cursor:pointer;transition:all 0.2s;font-size:10px;}
 .level-card:hover{border-color:var(--neon-green);background:rgba(0,255,136,0.08);transform:translateY(-2px);}
 .level-card.completed{border-color:var(--neon-gold);background:rgba(255,215,0,0.05);}
 .level-card.completed .level-num{color:var(--neon-gold);}
 .level-num{font-size:14px;font-weight:700;color:var(--neon-green);margin-bottom:4px;}
 .level-goal{color:rgba(255,255,255,0.5);font-size:9px;}
-
 .lb-entry{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;margin:4px 0;border-radius:8px;font-size:11px;background:rgba(0,0,0,0.3);border:1px solid rgba(0,255,136,0.1);transition:all 0.2s;}
 .lb-entry:hover{background:rgba(0,255,136,0.05);}
 .lb-entry.rank-1{border-color:rgba(255,215,0,0.4);background:rgba(255,215,0,0.05);}
@@ -252,73 +74,70 @@ canvas.reset-flash{animation:resetFlash 0.4s ease 3;}
 .lb-rank{font-size:16px;min-width:30px;}
 .lb-name{flex:1;text-align:left;margin-left:10px;}
 .lb-score{color:var(--neon-green);font-weight:700;}
-
 .profile-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;width:100%;margin:16px 0;}
 .stat-box{padding:12px 8px;background:rgba(0,0,0,0.3);border:1px solid var(--border-neon);border-radius:8px;}
 .stat-val{font-size:18px;color:var(--neon-green);font-weight:700;}
 .stat-label{font-size:8px;color:rgba(255,255,255,0.4);margin-top:4px;}
 .username-display{font-size:20px;font-weight:700;color:white;margin:8px 0;}
 .username-tag{font-size:9px;padding:3px 10px;background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);border-radius:20px;color:var(--neon-green);display:inline-block;margin-bottom:16px;}
-
 .result-icon{font-size:60px;margin-bottom:10px;animation:bounce 0.5s ease;}
 @keyframes bounce{0%{transform:scale(0)}70%{transform:scale(1.2)}100%{transform:scale(1)}}
 .result-score{font-size:28px;color:var(--neon-green);margin:8px 0;}
 .result-sub{font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:20px;}
-
-#countdownOverlay{
-  position:fixed;inset:0;z-index:50;
-  display:flex;align-items:center;justify-content:center;
-  background:rgba(6,10,15,0.75);
-  backdrop-filter:blur(4px);
-  pointer-events:none;
-}
+#countdownOverlay{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:rgba(6,10,15,0.75);backdrop-filter:blur(4px);pointer-events:none;}
 #countdownOverlay.hidden{display:none!important;}
-#countdownNumber{
-  font-family:'Press Start 2P',monospace;
-  font-size:clamp(60px,15vw,120px);
-  color:var(--neon-green);
-  text-shadow:0 0 40px var(--neon-green),0 0 80px rgba(0,255,136,0.5);
-  animation:cdPop 0.4s ease;
-}
+#countdownNumber{font-family:'Press Start 2P',monospace;font-size:clamp(60px,15vw,120px);color:var(--neon-green);text-shadow:0 0 40px var(--neon-green),0 0 80px rgba(0,255,136,0.5);animation:cdPop 0.4s ease;}
 @keyframes cdPop{0%{transform:scale(1.8);opacity:0}100%{transform:scale(1);opacity:1}}
-
-#pauseOverlay{
-  position:fixed;inset:0;z-index:50;
-  display:flex;align-items:center;justify-content:center;
-  flex-direction:column;gap:16px;
-  background:rgba(6,10,15,0.85);
-  backdrop-filter:blur(6px);
-}
+#pauseOverlay{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;background:rgba(6,10,15,0.85);backdrop-filter:blur(6px);}
 #pauseOverlay.hidden{display:none!important;}
-.pause-title{
-  font-family:'Press Start 2P',monospace;
-  font-size:clamp(18px,4vw,32px);
-  color:var(--neon-blue);
-  text-shadow:0 0 20px var(--neon-blue);
-  margin-bottom:10px;
-}
-#pauseBtn{
-  position:fixed;top:12px;right:12px;z-index:40;
-  padding:8px 14px;font-size:11px;
-  font-family:'Orbitron',monospace;font-weight:700;
-  background:rgba(0,0,0,0.6);border:1px solid rgba(0,195,255,0.4);
-  color:var(--neon-blue);border-radius:8px;cursor:pointer;transition:all 0.2s;
-}
+.pause-title{font-family:'Press Start 2P',monospace;font-size:clamp(18px,4vw,32px);color:var(--neon-blue);text-shadow:0 0 20px var(--neon-blue);margin-bottom:10px;}
+#pauseBtn{position:fixed;top:12px;right:12px;z-index:40;padding:8px 14px;font-size:11px;font-family:'Orbitron',monospace;font-weight:700;background:rgba(0,0,0,0.6);border:1px solid rgba(0,195,255,0.4);color:var(--neon-blue);border-radius:8px;cursor:pointer;transition:all 0.2s;}
 #pauseBtn:hover{background:rgba(0,195,255,0.15);}
-
-#loading{
-  position:fixed;inset:0;z-index:999;
-  background:var(--bg-dark);
-  display:flex;align-items:center;justify-content:center;
-  flex-direction:column;gap:16px;
-}
+#loading{position:fixed;inset:0;z-index:999;background:var(--bg-dark);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;}
 .loader{width:40px;height:40px;border:3px solid rgba(0,255,136,0.2);border-top-color:var(--neon-green);border-radius:50%;animation:spin 0.8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg)}}
-
 .hidden{display:none!important;}
+
+/* ===== ONLINE MODE STYLES ===== */
+.lobby-list{width:100%;max-width:480px;max-height:50vh;overflow-y:auto;display:flex;flex-direction:column;gap:8px;}
+.lobby-card{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:rgba(0,0,0,0.4);border:1px solid rgba(0,195,255,0.2);border-radius:10px;cursor:pointer;transition:all 0.2s;font-size:11px;}
+.lobby-card:hover{border-color:var(--neon-blue);background:rgba(0,195,255,0.06);transform:translateX(4px);}
+.lobby-card.full{opacity:0.4;cursor:not-allowed;pointer-events:none;}
+.lobby-name{font-weight:700;color:white;font-size:13px;}
+.lobby-info{color:rgba(255,255,255,0.4);font-size:10px;margin-top:2px;}
+.lobby-players{color:var(--neon-blue);font-weight:700;}
+.search-bar{display:flex;gap:8px;width:100%;max-width:480px;margin-bottom:12px;}
+.search-bar input{margin:0;flex:1;}
+.player-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;margin:4px 0;border-radius:8px;background:rgba(0,0,0,0.3);border:1px solid rgba(0,255,136,0.1);font-size:12px;}
+.player-row.chef{border-color:var(--neon-gold);background:rgba(255,215,0,0.05);}
+.player-name{display:flex;align-items:center;gap:8px;}
+.chef-badge{font-size:9px;padding:2px 7px;background:rgba(255,215,0,0.15);border:1px solid rgba(255,215,0,0.4);border-radius:10px;color:var(--neon-gold);}
+.form-label{font-size:10px;color:rgba(255,255,255,0.5);text-align:left;margin-top:8px;margin-bottom:2px;letter-spacing:1px;}
+
+/* ONLINE GAME */
+#onlineGame{position:fixed;inset:0;z-index:100;background:#060a0f;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:8px;}
+#onlineGame.hidden{display:none!important;}
+#onlineHUD{display:flex;justify-content:space-between;align-items:center;width:100%;max-width:900px;padding:6px 12px;background:rgba(0,0,0,0.6);border:1px solid rgba(0,195,255,0.2);border-radius:8px;margin-bottom:6px;font-size:11px;flex-wrap:wrap;gap:6px;}
+#onlineTimer{font-family:'Press Start 2P',monospace;font-size:16px;color:var(--neon-pink);}
+#onlineScore{color:var(--neon-green);font-weight:700;font-size:15px;}
+#onlineTail{color:var(--neon-blue);font-weight:700;}
+#onlineCanvas{background:#0a0f0a;border:2px solid rgba(0,195,255,0.3);border-radius:8px;display:block;max-width:98vw;max-height:75vh;}
+#killFeed{position:fixed;top:60px;left:12px;z-index:200;display:flex;flex-direction:column;gap:4px;pointer-events:none;}
+.kill-msg{font-size:10px;padding:4px 10px;background:rgba(255,0,128,0.15);border:1px solid rgba(255,0,128,0.3);border-radius:6px;color:white;animation:fadeKill 3s ease forwards;}
+@keyframes fadeKill{0%{opacity:1;transform:translateX(0)}80%{opacity:1}100%{opacity:0;transform:translateX(-20px)}}
+#deathScreen{position:fixed;inset:0;z-index:150;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;background:rgba(6,10,15,0.88);backdrop-filter:blur(6px);}
+#deathScreen.hidden{display:none!important;}
+#invincibleBar{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:200;font-size:10px;padding:4px 12px;background:rgba(255,215,0,0.15);border:1px solid rgba(255,215,0,0.5);border-radius:12px;color:var(--neon-gold);font-weight:700;pointer-events:none;}
+#invincibleBar.hidden{display:none!important;}
+#onlineResultScreen{position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;background:rgba(6,10,15,0.95);}
+#onlineResultScreen.hidden{display:none!important;}
+.result-row{display:flex;align-items:center;gap:12px;padding:10px 20px;border-radius:8px;font-size:13px;margin:3px 0;width:100%;max-width:340px;}
+.result-row.rank-1{background:rgba(255,215,0,0.1);border:1px solid rgba(255,215,0,0.4);}
+.result-row.rank-2{background:rgba(192,192,192,0.08);border:1px solid rgba(192,192,192,0.3);}
+.result-row.rank-3{background:rgba(205,127,50,0.08);border:1px solid rgba(205,127,50,0.3);}
+.result-row.other{background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);}
 </style>
 </head>
-
 <body>
 
 <!-- LOADING -->
@@ -328,7 +147,7 @@ canvas.reset-flash{animation:resetFlash 0.4s ease 3;}
   <div style="font-size:9px;color:rgba(0,255,136,0.5);letter-spacing:3px">CHARGEMENT...</div>
 </div>
 
-<!-- AUTH - REGISTER -->
+<!-- AUTH REGISTER -->
 <div id="screenAuth" class="screen hidden">
   <div class="main-title">🐍 SNAKE</div>
   <div class="subtitle">U L T I M A T E</div>
@@ -344,7 +163,7 @@ canvas.reset-flash{animation:resetFlash 0.4s ease 3;}
   </div>
 </div>
 
-<!-- AUTH - LOGIN -->
+<!-- AUTH LOGIN -->
 <div id="screenLogin" class="screen hidden">
   <div class="main-title">🐍 SNAKE</div>
   <div class="subtitle">U L T I M A T E</div>
@@ -367,13 +186,14 @@ canvas.reset-flash{animation:resetFlash 0.4s ease 3;}
   <div class="menu-buttons">
     <button class="btn btn-primary" onclick="startClassic()">▶ Mode Classique</button>
     <button class="btn btn-secondary" onclick="showScreen('screenAdventure');updateAdventureUI()">🗺 Mode Aventure</button>
+    <button class="btn btn-blue" onclick="showOnlineHub()">🌐 Mode Online</button>
     <button class="btn btn-secondary" onclick="showLeaderboard()">🏆 Classement</button>
     <button class="btn btn-secondary" onclick="showProfile()">👤 Profil</button>
     <button class="btn btn-danger" style="margin-top:10px;font-size:10px" onclick="logout()">Déconnexion</button>
   </div>
 </div>
 
-<!-- ADVENTURE MENU -->
+<!-- ADVENTURE -->
 <div id="screenAdventure" class="screen hidden">
   <div class="main-title" style="font-size:clamp(14px,3vw,28px);margin-bottom:6px">MODE AVENTURE</div>
   <div class="subtitle" style="margin-bottom:20px">CHOISIR UN NIVEAU</div>
@@ -381,22 +201,13 @@ canvas.reset-flash{animation:resetFlash 0.4s ease 3;}
   <button class="btn btn-secondary" style="margin-top:16px" onclick="showScreen('screenMenu')">← Retour</button>
 </div>
 
-<!-- GAME -->
+<!-- GAME (solo) -->
 <div id="screenGame" class="screen hidden" style="padding:10px">
   <div class="score-bar">
-    <div>
-      <div style="font-size:9px;color:rgba(255,255,255,0.4)">SCORE</div>
-      <div class="score-val" id="scoreDisplay">0</div>
-    </div>
+    <div><div style="font-size:9px;color:rgba(255,255,255,0.4)">SCORE</div><div class="score-val" id="scoreDisplay">0</div></div>
     <div id="objectiveTag" class="objective-tag hidden"></div>
-    <div>
-      <div style="font-size:9px;color:rgba(255,255,255,0.4)">QUEUE</div>
-      <div style="font-size:14px;font-weight:700;color:var(--neon-blue)" id="tailDisplay">1</div>
-    </div>
-    <div>
-      <div style="font-size:9px;color:rgba(255,255,255,0.4)">BEST</div>
-      <div style="font-size:14px;font-weight:700;color:var(--neon-gold)" id="bestInGame">0</div>
-    </div>
+    <div><div style="font-size:9px;color:rgba(255,255,255,0.4)">QUEUE</div><div style="font-size:14px;font-weight:700;color:var(--neon-blue)" id="tailDisplay">1</div></div>
+    <div><div style="font-size:9px;color:rgba(255,255,255,0.4)">BEST</div><div style="font-size:14px;font-weight:700;color:var(--neon-gold)" id="bestInGame">0</div></div>
   </div>
   <div id="bonusBar"></div>
   <canvas id="canvas" width="400" height="400"></canvas>
@@ -410,21 +221,18 @@ canvas.reset-flash{animation:resetFlash 0.4s ease 3;}
   </div>
 </div>
 
-<!-- COUNTDOWN OVERLAY -->
-<div id="countdownOverlay" class="hidden">
-  <div id="countdownNumber">3</div>
-</div>
+<!-- COUNTDOWN -->
+<div id="countdownOverlay" class="hidden"><div id="countdownNumber">3</div></div>
 
-<!-- PAUSE OVERLAY -->
+<!-- PAUSE -->
 <div id="pauseOverlay" class="hidden">
   <div class="pause-title">⏸ PAUSE</div>
   <button class="btn btn-primary" onclick="resumeGame()">▶ Reprendre</button>
   <button class="btn btn-danger" onclick="quitToMenu()">⌂ Quitter la partie</button>
 </div>
-
 <button id="pauseBtn" class="hidden" onclick="togglePause()">⏸ PAUSE</button>
 
-<!-- GAME OVER -->
+<!-- GAMEOVER -->
 <div id="screenGameover" class="screen hidden">
   <div class="result-icon">💀</div>
   <div style="font-family:'Press Start 2P',monospace;font-size:18px;color:var(--neon-pink);margin-bottom:8px">GAME OVER</div>
@@ -472,827 +280,1305 @@ canvas.reset-flash{animation:resetFlash 0.4s ease 3;}
   <button class="btn btn-secondary" style="margin-top:16px" onclick="showScreen('screenMenu')">← Retour</button>
 </div>
 
-<script>
+<!-- ===== ONLINE HUB ===== -->
+<div id="screenOnlineHub" class="screen hidden">
+  <div class="main-title" style="font-size:clamp(14px,3vw,28px);margin-bottom:6px">🌐 MODE ONLINE</div>
+  <div class="subtitle" style="margin-bottom:20px">LOBBIES EN DIRECT</div>
+  <div class="search-bar">
+    <input id="lobbySearchInput" placeholder="Rechercher un lobby..." autocomplete="off" oninput="filterLobbies()">
+  </div>
+  <div id="lobbyList" class="lobby-list"></div>
+  <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;justify-content:center">
+    <button class="btn btn-primary" onclick="showScreen('screenCreateLobby')">＋ Créer un lobby</button>
+    <button class="btn btn-secondary" onclick="showScreen('screenMenu')">← Retour</button>
+  </div>
+  <div id="hubMsg" class="msg"></div>
+</div>
 
-/* ===== FIREBASE CONFIG ===== */
+<!-- CREATE LOBBY -->
+<div id="screenCreateLobby" class="screen hidden">
+  <div class="main-title" style="font-size:clamp(14px,3vw,24px);margin-bottom:6px">＋ CRÉER UN LOBBY</div>
+  <div class="card">
+    <div class="form-label">NOM DU LOBBY (5-15 caractères)</div>
+    <input id="lobbyNameInput" placeholder="Mon lobby..." maxlength="15" autocomplete="off">
+    <div class="form-label">NOMBRE DE JOUEURS MAX (2-8)</div>
+    <select id="lobbyMaxPlayers">
+      <option value="2">2 joueurs</option>
+      <option value="3">3 joueurs</option>
+      <option value="4" selected>4 joueurs</option>
+      <option value="5">5 joueurs</option>
+      <option value="6">6 joueurs</option>
+      <option value="7">7 joueurs</option>
+      <option value="8">8 joueurs</option>
+    </select>
+    <div class="form-label">DURÉE DE LA PARTIE</div>
+    <select id="lobbyDuration">
+      <option value="120">2 minutes</option>
+      <option value="150">2 min 30</option>
+      <option value="180" selected>3 minutes</option>
+      <option value="210">3 min 30</option>
+      <option value="240">4 minutes</option>
+      <option value="270">4 min 30</option>
+      <option value="300">5 minutes</option>
+    </select>
+    <button class="btn btn-primary" style="width:100%;margin-top:16px" onclick="createLobby()">Créer le lobby</button>
+    <button class="btn btn-secondary" style="width:100%;margin-top:4px" onclick="showScreen('screenOnlineHub')">← Retour</button>
+    <div id="createMsg" class="msg"></div>
+  </div>
+</div>
+
+<!-- LOBBY ROOM -->
+<div id="screenLobbyRoom" class="screen hidden">
+  <div class="main-title" style="font-size:clamp(12px,2.5vw,22px);margin-bottom:4px" id="lobbyRoomTitle">LOBBY</div>
+  <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:16px" id="lobbyRoomInfo"></div>
+  <div id="lobbyPlayerList" style="width:100%;max-width:380px;margin-bottom:12px"></div>
+  <div id="lobbyChefControls" class="hidden" style="display:flex;flex-direction:column;gap:8px;width:100%;max-width:380px">
+    <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">Minimum 2 joueurs pour lancer</div>
+    <button class="btn btn-primary" id="startOnlineBtn" onclick="launchOnlineGame()">🚀 Lancer la partie</button>
+  </div>
+  <button class="btn btn-danger" style="margin-top:12px" onclick="leaveLobby()">Quitter le lobby</button>
+  <div id="lobbyMsg" class="msg"></div>
+</div>
+
+<!-- ONLINE VS SCREEN -->
+<div id="screenOnlineVS" class="screen hidden">
+  <div class="main-title" style="font-size:clamp(14px,3vw,28px);color:var(--neon-pink);margin-bottom:20px">⚔ VS</div>
+  <div id="vsPlayerList" style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center;align-items:center;font-size:14px;font-weight:700"></div>
+</div>
+
+<!-- ONLINE GAME -->
+<div id="onlineGame" class="hidden">
+  <div id="onlineHUD">
+    <div><span style="color:rgba(255,255,255,0.4);font-size:9px">SCORE </span><span id="onlineScore">0</span></div>
+    <div id="onlineTimer">3:00</div>
+    <div><span style="color:rgba(255,255,255,0.4);font-size:9px">QUEUE </span><span id="onlineTail">1</span></div>
+  </div>
+  <canvas id="onlineCanvas" width="800" height="800"></canvas>
+</div>
+
+<!-- KILL FEED -->
+<div id="killFeed"></div>
+
+<!-- INVINCIBLE BAR -->
+<div id="invincibleBar" class="hidden">⭐ INVINCIBLE — <span id="invincibleTimer">5</span>s</div>
+
+<!-- DEATH SCREEN -->
+<div id="deathScreen" class="hidden">
+  <div style="font-size:50px">💀</div>
+  <div style="font-family:'Press Start 2P',monospace;font-size:16px;color:var(--neon-pink)" id="deathMsg">Tu es mort</div>
+  <div style="font-size:12px;color:rgba(255,255,255,0.5)" id="deathBy"></div>
+  <div style="font-size:24px;color:var(--neon-blue);font-weight:700;margin-top:8px">Respawn dans <span id="respawnTimer">5</span>s</div>
+</div>
+
+<!-- ONLINE RESULT -->
+<div id="onlineResultScreen" class="hidden">
+  <div class="main-title" style="font-size:clamp(16px,3vw,30px);margin-bottom:20px">🏆 RÉSULTATS</div>
+  <div id="onlineResultList" style="display:flex;flex-direction:column;align-items:center;width:100%;max-width:380px"></div>
+  <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:16px" id="returnMsg">Retour au lobby dans 10s...</div>
+</div>
+
+<script>
+/* ===== FIREBASE ===== */
 const firebaseConfig = {
   apiKey: "AIzaSyDdzcbtAwYXDPfM1RAOk3YzzDfRoQcomFQ",
   authDomain: "snake-ultimate-by-soso.firebaseapp.com",
   projectId: "snake-ultimate-by-soso",
   storageBucket: "snake-ultimate-by-soso.firebasestorage.app",
   messagingSenderId: "342621367023",
-  appId: "1:342621367023:web:bd16283003ce63584ec91a"
+  appId: "1:342621367023:web:bd16283003ce63584ec91a",
+  databaseURL: "https://snake-ultimate-by-soso-default-rtdb.europe-west1.firebasedatabase.app"
 }
-
 firebase.initializeApp(firebaseConfig)
 const db = firebase.firestore()
+const rtdb = firebase.database()
 
-/* ===== STATE ===== */
-let currentUser = null
-let userData = null
-let sessionFruits = 0
-
-let canvas = document.getElementById("canvas")
-let ctx = canvas.getContext("2d")
-
+/* ===== STATE SOLO ===== */
+let currentUser=null, userData=null, sessionFruits=0
+let canvas=document.getElementById("canvas"), ctx=canvas.getContext("2d")
 let snake, food, dx, dy, score, interval
-let gridSize = 20
-let mode = "classic"
-let level = 1
-let levelGoal = 10
-let snakeColor = "lime"
-let isPaused = false
-let isCountingDown = false  // bloque la pause pendant le countdown
-let speedMultiplier = 1
-const BASE_INTERVAL = 130
+let gridSize=20, mode="classic", level=1, levelGoal=10, snakeColor="lime"
+let isPaused=false, isCountingDown=false, speedMultiplier=1
+const BASE_INTERVAL=130
+let nextDx, nextDy, directionChanged=false
+let extraFoods=[]
+let colors=["lime","cyan","orange","yellow","pink","purple","red","#00c3ff","gold","white"]
 
-let nextDx, nextDy
-let directionChanged = false
+let appleImg=new Image(); appleImg.src="apple.png"
+let goldenAppleImg=new Image(); goldenAppleImg.src="golden_apple.png"
+let snakeHeadImg=new Image(); snakeHeadImg.src="snake_head.png"
+let phantomImg=new Image(); phantomImg.src="phantom.png"
+let clockImg=new Image(); clockImg.src="clock.png"
+let fruitRainImg=new Image(); fruitRainImg.src="fruit_rain.png"
+let starImg=new Image(); starImg.src="star.png"
+let diamondImg=new Image(); diamondImg.src="diamond.png"
+let saladImg=new Image(); saladImg.src="salad.png"
 
-let colors = ["lime","cyan","orange","yellow","pink","purple","red","#00c3ff","gold","white"]
+/* BONUS */
+let bonusOnMap=null, bonusSpawnTimer=null, bonusDespawnTimer=null
+let activeEffects={phantom:false,clockFast:false,clockSlow:false,rain:false,star:false}
+let effectTimers={}, effectCountdowns={}, effectCDIntervals={}, rainInterval=null
+const BONUS_POOL=['phantom','phantom','clock','clock','clock','rain','rain','rain','star']
+const BONUS_LABELS={phantom:'👻 PHANTOM',clockFast:'⚡ RAPIDE',clockSlow:'🐢 LENT',rain:'🍎 PLUIE',star:'⭐ INVINCIBLE x2'}
+const BONUS_CLASS={phantom:'b-phantom',clockFast:'b-clockFast',clockSlow:'b-clockSlow',rain:'b-rain',star:'b-star'}
+const BONUS_COLORS={phantom:'#a78bfa',clock:'#f97316',rain:'#34d399',star:'#ffd700'}
 
-let appleImg = new Image(); appleImg.src = "apple.png"
-let goldenAppleImg = new Image(); goldenAppleImg.src = "golden_apple.png"
-let snakeHeadImg = new Image(); snakeHeadImg.src = "snake_head.png"
-let phantomImg = new Image(); phantomImg.src = "phantom.png"
-let clockImg = new Image(); clockImg.src = "clock.png"
-let fruitRainImg = new Image(); fruitRainImg.src = "fruit_rain.png"
-let starImg = new Image(); starImg.src = "star.png"
-let diamondImg = new Image(); diamondImg.src = "diamond.png"
-let sladImg = new Image(); sladImg.src = "salad.png"
+let sessionId = Math.random().toString(36).slice(2)
+let sessionRef = null
 
-/* ===== BONUS SYSTEM ===== */
-let bonusOnMap = null
-let bonusSpawnTimer = null
-let bonusDespawnTimer = null
-let extraFoods = []
-
-let activeEffects = { phantom:false, clockFast:false, clockSlow:false, rain:false, star:false }
-let effectTimers = {}
-let effectCountdowns = {}
-let effectCDIntervals = {}
-let rainInterval = null
-
-// Rareté : star = 1/9
-const BONUS_POOL = ['phantom','phantom','clock','clock','clock','rain','rain','rain','star']
-const BONUS_LABELS = { phantom:'👻 PHANTOM', clockFast:'⚡ RAPIDE', clockSlow:'🐢 LENT', rain:'🍎 PLUIE', star:'⭐ INVINCIBLE x2' }
-const BONUS_CLASS  = { phantom:'b-phantom', clockFast:'b-clockFast', clockSlow:'b-clockSlow', rain:'b-rain', star:'b-star' }
-const BONUS_COLORS = { phantom:'#a78bfa', clock:'#f97316', rain:'#34d399', star:'#ffd700' }
-
-/* ===== NAVIGATION ===== */
-function showScreen(id){
-  document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'))
-  document.getElementById(id).classList.remove('hidden')
-}
-
-/* ===== AUTH ===== */
-async function register(){
-  let user = document.getElementById("regUser").value.trim()
-  let pass = document.getElementById("regPass").value
-  let pass2 = document.getElementById("regPass2").value
-
-  if(!user || user.length < 3){ setMsg("regMsg","Pseudo trop court (min 3 caractères)","error"); return }
-  if(pass.length < 4){ setMsg("regMsg","Mot de passe trop court (min 4 caractères)","error"); return }
-  if(pass !== pass2){ setMsg("regMsg","Les mots de passe ne correspondent pas","error"); return }
-  if(/[^a-zA-Z0-9_-]/.test(user)){ setMsg("regMsg","Pseudo invalide (lettres, chiffres, _ - seulement)","error"); return }
-
-  try{
-    setMsg("regMsg","Vérification...","")
-    let doc = await db.collection("users").doc(user).get()
-    if(doc.exists){ setMsg("regMsg","Ce pseudo est déjà pris","error"); return }
-    await db.collection("users").doc(user).set({
-      password: pass, bestScore: 0, totalFruits: 0,
-      levelsCompleted: 0, completedLevels: [], createdAt: Date.now()
-    })
-    currentUser = user
-    await loadUserData()
-    startApp()
-  }catch(e){ setMsg("regMsg","Erreur : "+e.message,"error") }
-}
-
-async function login(){
-  let user = document.getElementById("loginUser").value.trim()
-  let pass = document.getElementById("loginPass").value
-  if(!user || !pass){ setMsg("loginMsg","Remplis tous les champs","error"); return }
-  try{
-    setMsg("loginMsg","Connexion...","")
-    let doc = await db.collection("users").doc(user).get()
-    if(!doc.exists || doc.data().password !== pass){
-      setMsg("loginMsg","Pseudo ou mot de passe incorrect","error"); return
+function startSessionWatch(username){
+  if(sessionRef) sessionRef.off()
+  sessionRef = rtdb.ref('sessions/'+username)
+  // Écrire notre session
+  sessionRef.set(sessionId)
+  // Surveiller si une autre session prend la main
+  sessionRef.on('value', snap=>{
+    if(snap.val() && snap.val() !== sessionId){
+      // Une autre session a pris la place
+      sessionRef.off()
+      currentUser = null; userData = null
+      alert("⚠️ Tu as été déconnecté car ton compte a été ouvert ailleurs.")
+      showScreen('screenAuth')
     }
-    currentUser = user
-    userData = doc.data()
-    if(!userData.completedLevels) userData.completedLevels = []
-    startApp()
-  }catch(e){ setMsg("loginMsg","Erreur : "+e.message,"error") }
-}
-
-function logout(){ currentUser = null; userData = null; showScreen('screenAuth') }
-
-function setMsg(id, text, type){
-  let el = document.getElementById(id)
-  el.textContent = text
-  el.className = "msg " + type
-}
-
-/* ===== DONNÉES USER ===== */
-async function loadUserData(){
-  if(!currentUser) return
-  let doc = await db.collection("users").doc(currentUser).get()
-  userData = doc.data()
-  if(!userData.completedLevels) userData.completedLevels = []
-}
-
-function isLevelCompleted(lvl){
-  if(!userData || !userData.completedLevels) return false
-  return userData.completedLevels.includes(lvl)
-}
-
-async function saveData(levelCompleted){
-  if(!currentUser || !userData) return
-  try{
-    let doc = await db.collection("users").doc(currentUser).get()
-    let d = doc.data()
-    let updateObj = {
-      bestScore: Math.max(d.bestScore || 0, score),
-      totalFruits: (d.totalFruits || 0) + sessionFruits,
-    }
-    if(levelCompleted){
-      let arr = d.completedLevels || []
-      if(!arr.includes(levelCompleted)) arr.push(levelCompleted)
-      updateObj.completedLevels = arr
-      updateObj.levelsCompleted = arr.length
-    }
-    await db.collection("users").doc(currentUser).update(updateObj)
-    await loadUserData()
-  }catch(e){ console.error("saveData:", e) }
-}
-
-/* ===== START APP ===== */
-function startApp(){
-  sessionFruits = 0
-  updateBestScoreDisplay()
-  showScreen('screenMenu')
-}
-
-function updateBestScoreDisplay(){
-  let best = userData ? (userData.bestScore || 0) : 0
-  document.getElementById("bestScore").innerText = "🏆 Meilleur score : " + best
-  document.getElementById("bestInGame").innerText = best
-}
-
-/* ===== MENU AVENTURE ===== */
-function updateAdventureUI(){
-  let container = document.getElementById("levels")
-  container.innerHTML = ""
-  for(let i=1;i<=10;i++){
-    let done = isLevelCompleted(i)
-    let div = document.createElement("div")
-    div.className = "level-card" + (done ? " completed" : "")
-    div.innerHTML = `<div class="level-num">${done?"✅":"🔹"} Niveau ${i}</div><div class="level-goal">Objectif : ${i*10} pts</div>`
-    div.onclick = () => startAdventure(i)
-    container.appendChild(div)
-  }
-}
-
-/* ===== JEU ===== */
-function startClassic(){ mode = "classic"; startGame() }
-function openAdventure(){ showScreen('screenAdventure'); updateAdventureUI() }
-function startAdventure(lvl){ mode="adventure"; level=lvl; levelGoal=lvl*10; snakeColor=colors[lvl-1]; startGame() }
-
-function startGame(){
-  sessionFruits = 0
-  isPaused = false
-  speedMultiplier = 1
-  clearAllBonuses()
-  showScreen('screenGame')
-  document.getElementById("pauseBtn").classList.remove("hidden")
-
-  let obj = document.getElementById("objectiveTag")
-  if(mode === "adventure"){
-    obj.textContent = "NIVEAU "+level+" | OBJECTIF "+levelGoal
-    obj.classList.remove("hidden")
-  } else {
-    obj.classList.add("hidden")
-  }
-
-  snake = [{x:200,y:200}]
-  extraFoods = []
-  bonusOnMap = null
-  // Initialiser food simplement sans dépendre de randomFreeCell
-  food = {x:100, y:100, type:'normal'}
-  dx = gridSize; dy = 0
-  nextDx = gridSize; nextDy = 0
-  directionChanged = false
-  score = 0
-
-  document.getElementById("scoreDisplay").innerText = "0"
-  document.getElementById("tailDisplay").innerText = "1"
-  document.getElementById("bonusBar").innerHTML = ""
-  canvas.className = ""
-  updateBestScoreDisplay()
-  clearInterval(interval)
-
-  if(mode === "classic") scheduleBonusSpawn()
-
-  startCountdown(() => {
-    interval = setInterval(loop, getSpeed())
   })
 }
 
-/* ===== BONUS SPAWN ===== */
+function stopSessionWatch(){
+  if(sessionRef){
+    sessionRef.off()
+    sessionRef.remove()
+    sessionRef = null
+  }
+}
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));document.getElementById(id).classList.remove('hidden')}
+
+/* ===== AUTH ===== */
+async function register(){
+  let u=document.getElementById("regUser").value.trim(),p=document.getElementById("regPass").value,p2=document.getElementById("regPass2").value
+  if(!u||u.length<3){setMsg("regMsg","Pseudo trop court","error");return}
+  if(p.length<4){setMsg("regMsg","Mot de passe trop court","error");return}
+  if(p!==p2){setMsg("regMsg","Mots de passe différents","error");return}
+  if(/[^a-zA-Z0-9_-]/.test(u)){setMsg("regMsg","Pseudo invalide","error");return}
+  try{
+    setMsg("regMsg","Vérification...","")
+    let doc=await db.collection("users").doc(u).get()
+    if(doc.exists){setMsg("regMsg","Pseudo déjà pris","error");return}
+    await db.collection("users").doc(u).set({password:p,bestScore:0,totalFruits:0,levelsCompleted:0,completedLevels:[],createdAt:Date.now()})
+    currentUser=u; await loadUserData(); startSessionWatch(u); startApp()
+  }catch(e){setMsg("regMsg","Erreur : "+e.message,"error")}
+}
+async function login(){
+  let u=document.getElementById("loginUser").value.trim(),p=document.getElementById("loginPass").value
+  if(!u||!p){setMsg("loginMsg","Remplis tous les champs","error");return}
+  try{
+    setMsg("loginMsg","Connexion...","")
+    let doc=await db.collection("users").doc(u).get()
+    if(!doc.exists||doc.data().password!==p){setMsg("loginMsg","Pseudo ou mdp incorrect","error");return}
+    currentUser=u; userData=doc.data(); if(!userData.completedLevels)userData.completedLevels=[]
+    startSessionWatch(u); startApp()
+  }catch(e){setMsg("loginMsg","Erreur : "+e.message,"error")}
+}
+function logout(){stopSessionWatch();currentUser=null;userData=null;showScreen('screenAuth')}
+function setMsg(id,t,c){let e=document.getElementById(id);if(!e)return;e.textContent=t;e.className="msg "+c}
+async function loadUserData(){
+  if(!currentUser)return
+  let doc=await db.collection("users").doc(currentUser).get()
+  userData=doc.data(); if(!userData.completedLevels)userData.completedLevels=[]
+}
+function isLevelCompleted(l){return userData&&userData.completedLevels&&userData.completedLevels.includes(l)}
+async function saveData(lvlDone){
+  if(!currentUser||!userData)return
+  try{
+    let doc=await db.collection("users").doc(currentUser).get(),d=doc.data()
+    let upd={bestScore:Math.max(d.bestScore||0,score),totalFruits:(d.totalFruits||0)+sessionFruits}
+    if(lvlDone){let arr=d.completedLevels||[];if(!arr.includes(lvlDone))arr.push(lvlDone);upd.completedLevels=arr;upd.levelsCompleted=arr.length}
+    await db.collection("users").doc(currentUser).update(upd); await loadUserData()
+  }catch(e){console.error(e)}
+}
+function startApp(){sessionFruits=0;updateBestScoreDisplay();showScreen('screenMenu')}
+function updateBestScoreDisplay(){
+  let b=userData?(userData.bestScore||0):0
+  document.getElementById("bestScore").innerText="🏆 Meilleur score : "+b
+  document.getElementById("bestInGame").innerText=b
+}
+function updateAdventureUI(){
+  let c=document.getElementById("levels");c.innerHTML=""
+  for(let i=1;i<=10;i++){
+    let done=isLevelCompleted(i),div=document.createElement("div")
+    div.className="level-card"+(done?" completed":"")
+    div.innerHTML=`<div class="level-num">${done?"✅":"🔹"} Niveau ${i}</div><div class="level-goal">Objectif : ${i*10} pts</div>`
+    div.onclick=()=>startAdventure(i); c.appendChild(div)
+  }
+}
+
+/* ===== JEU SOLO ===== */
+function startClassic(){mode="classic";startGame()}
+function startAdventure(l){mode="adventure";level=l;levelGoal=l*10;snakeColor=colors[l-1];startGame()}
+function startGame(){
+  sessionFruits=0;isPaused=false;speedMultiplier=1;clearAllBonuses()
+  showScreen('screenGame')
+  document.getElementById("pauseBtn").classList.remove("hidden")
+  let obj=document.getElementById("objectiveTag")
+  if(mode==="adventure"){obj.textContent="NIVEAU "+level+" | OBJECTIF "+levelGoal;obj.classList.remove("hidden")}
+  else obj.classList.add("hidden")
+  snake=[{x:200,y:200}];food={x:100,y:100,type:'normal'};extraFoods=[];bonusOnMap=null
+  dx=gridSize;dy=0;nextDx=gridSize;nextDy=0;directionChanged=false;score=0
+  document.getElementById("scoreDisplay").innerText="0"
+  document.getElementById("tailDisplay").innerText="1"
+  document.getElementById("bonusBar").innerHTML=""
+  canvas.className=""; updateBestScoreDisplay(); clearInterval(interval)
+  if(mode==="classic")scheduleBonusSpawn()
+  startCountdown(()=>{interval=setInterval(loop,getSpeed())})
+}
+
+/* BONUS SPAWN */
 function scheduleBonusSpawn(){
   clearTimeout(bonusSpawnTimer)
-  bonusSpawnTimer = setTimeout(()=>{
-    if(!isPaused) spawnBonus()
-    else scheduleBonusSpawn()
-  }, 30000)
+  bonusSpawnTimer=setTimeout(()=>{if(!isPaused)spawnBonus();else scheduleBonusSpawn()},30000)
 }
-
 function spawnBonus(){
-  if(bonusOnMap) return
-  let type = BONUS_POOL[Math.floor(Math.random()*BONUS_POOL.length)]
-  let pos = randomFreeCell()
-  bonusOnMap = {x:pos.x, y:pos.y, type}
-  bonusDespawnTimer = setTimeout(()=>{
-    bonusOnMap = null
-    scheduleBonusSpawn()
-  }, 10000)
+  if(bonusOnMap)return
+  let type=BONUS_POOL[Math.floor(Math.random()*BONUS_POOL.length)],pos=randomFreeCell()
+  bonusOnMap={x:pos.x,y:pos.y,type}
+  bonusDespawnTimer=setTimeout(()=>{bonusOnMap=null;scheduleBonusSpawn()},10000)
 }
-
 function clearAllBonuses(){
-  clearTimeout(bonusSpawnTimer)
-  clearTimeout(bonusDespawnTimer)
-  bonusOnMap = null
-  Object.keys(effectTimers).forEach(k => clearTimeout(effectTimers[k]))
-  Object.keys(effectCDIntervals).forEach(k => clearInterval(effectCDIntervals[k]))
-  effectTimers = {}; effectCountdowns = {}; effectCDIntervals = {}
-  Object.keys(activeEffects).forEach(k => activeEffects[k] = false)
-  clearInterval(rainInterval); rainInterval = null
-  extraFoods = []
-  document.getElementById("bonusBar").innerHTML = ""
-  canvas.className = ""
+  clearTimeout(bonusSpawnTimer);clearTimeout(bonusDespawnTimer);bonusOnMap=null
+  Object.keys(effectTimers).forEach(k=>clearTimeout(effectTimers[k]))
+  Object.keys(effectCDIntervals).forEach(k=>clearInterval(effectCDIntervals[k]))
+  effectTimers={};effectCountdowns={};effectCDIntervals={}
+  Object.keys(activeEffects).forEach(k=>activeEffects[k]=false)
+  clearInterval(rainInterval);rainInterval=null;extraFoods=[]
+  document.getElementById("bonusBar").innerHTML="";canvas.className=""
 }
-
-/* ===== CELLULE LIBRE ===== */
 function randomFreeCell(){
-  let cols = 400/gridSize
-  let rows = 400/gridSize
-  let occ = [...snake, ...extraFoods]
-  if(food) occ.push(food)
-  if(bonusOnMap) occ.push(bonusOnMap)
-  let pos
-  let attempts = 0
-  do {
-    pos = {
-      x: Math.floor(Math.random()*cols)*gridSize,
-      y: Math.floor(Math.random()*rows)*gridSize
-    }
-    attempts++
-  } while(attempts < 200 && occ.some(p => p.x===pos.x && p.y===pos.y))
+  let cols=400/gridSize,rows=400/gridSize,occ=[...snake,...extraFoods]
+  if(food)occ.push(food); if(bonusOnMap)occ.push(bonusOnMap)
+  let pos,attempts=0
+  do{pos={x:Math.floor(Math.random()*cols)*gridSize,y:Math.floor(Math.random()*rows)*gridSize};attempts++}
+  while(attempts<200&&occ.some(p=>p.x===pos.x&&p.y===pos.y))
   return pos
 }
 
-/* ===== AUTO-PAUSE SI CHANGEMENT D'ONGLET ===== */
-document.addEventListener("visibilitychange", ()=>{
-  if(document.hidden && !isCountingDown){
-    let gameVisible = !document.getElementById("screenGame").classList.contains("hidden")
-    if(gameVisible && !isPaused) pauseGame()
-  }
-})
-
+/* FOOD */
 function randomFood(){
-  let cols = 400/gridSize
-  let rows = 400/gridSize
-  let occ = [...snake, ...extraFoods]
-  if(bonusOnMap) occ.push(bonusOnMap)
-  let pos
-  let attempts = 0
-  do {
-    pos = {
-      x: Math.floor(Math.random()*cols)*gridSize,
-      y: Math.floor(Math.random()*rows)*gridSize
-    }
-    attempts++
-  } while(attempts < 200 && occ.some(p => p.x===pos.x && p.y===pos.y))
-
-  // Tirage du type de nourriture
-  // 1/20 arc-en-ciel, 1/15 diamant, 1/8 salade, 1/10 dorée, reste normal
-  let r = Math.random()
-  if(r < 1/20)       return {x:pos.x, y:pos.y, type:'rainbow'}
-  else if(r < 1/20 + 1/15) return {x:pos.x, y:pos.y, type:'diamond'}
-  else if(r < 1/20 + 1/15 + 1/8)  return {x:pos.x, y:pos.y, type:'salad'}
-  else if(r < 1/20 + 1/15 + 1/8 + 1/10) return {x:pos.x, y:pos.y, type:'gold'}
-  else                return {x:pos.x, y:pos.y, type:'normal'}
+  let cols=400/gridSize,rows=400/gridSize,occ=[...snake,...extraFoods]
+  if(bonusOnMap)occ.push(bonusOnMap)
+  let pos,attempts=0
+  do{pos={x:Math.floor(Math.random()*cols)*gridSize,y:Math.floor(Math.random()*rows)*gridSize};attempts++}
+  while(attempts<200&&occ.some(p=>p.x===pos.x&&p.y===pos.y))
+  let r=Math.random()
+  if(r<1/20)return{x:pos.x,y:pos.y,type:'rainbow'}
+  if(r<1/20+1/15)return{x:pos.x,y:pos.y,type:'diamond'}
+  if(r<1/20+1/15+1/8)return{x:pos.x,y:pos.y,type:'salad'}
+  if(r<1/20+1/15+1/8+1/10)return{x:pos.x,y:pos.y,type:'gold'}
+  return{x:pos.x,y:pos.y,type:'normal'}
+}
+function randomExtraFood(){
+  // BUG FIX : pluie de pommes inclut tous les types
+  let cols=400/gridSize,rows=400/gridSize,occ=[...snake,...extraFoods]
+  if(food)occ.push(food); if(bonusOnMap)occ.push(bonusOnMap)
+  let pos,attempts=0
+  do{pos={x:Math.floor(Math.random()*cols)*gridSize,y:Math.floor(Math.random()*rows)*gridSize};attempts++}
+  while(attempts<200&&occ.some(p=>p.x===pos.x&&p.y===pos.y))
+  let r=Math.random()
+  if(r<1/20)return{x:pos.x,y:pos.y,type:'rainbow'}
+  if(r<1/20+1/15)return{x:pos.x,y:pos.y,type:'diamond'}
+  if(r<1/20+1/15+1/8)return{x:pos.x,y:pos.y,type:'salad'}
+  if(r<1/20+1/15+1/8+1/10)return{x:pos.x,y:pos.y,type:'gold'}
+  return{x:pos.x,y:pos.y,type:'normal'}
+}
+function getFoodPts(f){
+  if(f.type==='gold')return 3
+  if(f.type==='diamond')return 5
+  if(f.type==='rainbow')return 10
+  return 1
 }
 
-/* ===== ACTIVER BONUS ===== */
+/* EFFETS */
 function activateBonus(type){
-  bonusOnMap = null
-  clearTimeout(bonusDespawnTimer)
-  scheduleBonusSpawn()
-  if(type === 'clock'){
-    applyEffect(Math.random()<0.25 ? 'clockFast' : 'clockSlow', 10)
-    return
-  }
-  applyEffect(type, 10)
+  bonusOnMap=null;clearTimeout(bonusDespawnTimer);scheduleBonusSpawn()
+  if(type==='clock'){applyEffect(Math.random()<0.25?'clockFast':'clockSlow',10);return}
+  // FIXED : étoile dure 15s et donne boost x1.5
+  applyEffect(type, type==='star'?15:10)
 }
-
-function applyEffect(name, sec){
-  if(effectTimers[name]) clearTimeout(effectTimers[name])
-  if(effectCDIntervals[name]) clearInterval(effectCDIntervals[name])
-
-  if(name === 'clockFast'){ activeEffects.clockSlow=false; activeEffects.clockFast=true; restartLoop() }
-  else if(name === 'clockSlow'){ activeEffects.clockFast=false; activeEffects.clockSlow=true; restartLoop() }
-  else if(name === 'star'){ activeEffects.star=true; canvas.classList.add('star-active') }
-  else activeEffects[name] = true
-
-  effectCountdowns[name] = sec
-  updateBonusBar()
-
-  effectCDIntervals[name] = setInterval(()=>{
-    effectCountdowns[name]--
-    updateBonusBar()
-    if(effectCountdowns[name] <= 0) clearInterval(effectCDIntervals[name])
-  }, 1000)
-
-  effectTimers[name] = setTimeout(()=>{
-    activeEffects[name] = false
-    if(name === 'star') canvas.classList.remove('star-active')
-    if(name === 'clockFast' || name === 'clockSlow') restartLoop()
-    if(name === 'rain'){ clearInterval(rainInterval); rainInterval = null }
-    delete effectCountdowns[name]
-    updateBonusBar()
-  }, sec*1000)
-
-  if(name === 'rain'){
-    rainInterval = setInterval(()=>{
-      if(extraFoods.length < 10){
-        let p = randomFreeCell()
-        extraFoods.push({x:p.x, y:p.y, gold:Math.random()<0.2})
-      }
-    }, 1000)
+function applyEffect(name,sec){
+  if(effectTimers[name])clearTimeout(effectTimers[name])
+  if(effectCDIntervals[name])clearInterval(effectCDIntervals[name])
+  if(name==='clockFast'){activeEffects.clockSlow=false;activeEffects.clockFast=true;restartLoop()}
+  else if(name==='clockSlow'){activeEffects.clockFast=false;activeEffects.clockSlow=true;restartLoop()}
+  else if(name==='star'){
+    activeEffects.star=true;canvas.classList.add('star-active')
+    // boost vitesse x1.5 pendant l'étoile
+    speedMultiplier*=1.5; restartLoop()
+  }
+  else activeEffects[name]=true
+  effectCountdowns[name]=sec; updateBonusBar()
+  effectCDIntervals[name]=setInterval(()=>{effectCountdowns[name]--;updateBonusBar();if(effectCountdowns[name]<=0)clearInterval(effectCDIntervals[name])},1000)
+  effectTimers[name]=setTimeout(()=>{
+    if(name==='star'){canvas.classList.remove('star-active');speedMultiplier=Math.max(1,speedMultiplier/1.5)}
+    activeEffects[name]=false
+    if(name==='clockFast'||name==='clockSlow'||name==='star')restartLoop()
+    if(name==='rain'){clearInterval(rainInterval);rainInterval=null}
+    delete effectCountdowns[name]; updateBonusBar()
+  },sec*1000)
+  if(name==='rain'){
+    rainInterval=setInterval(()=>{
+      if(extraFoods.length<10)extraFoods.push(randomExtraFood())
+    },1000)
   }
 }
-
 function getSpeed(){
-  let s = BASE_INTERVAL
-  if(activeEffects.clockFast) s = Math.round(BASE_INTERVAL / 1.5)
-  if(activeEffects.clockSlow) s = Math.round(BASE_INTERVAL / 0.5)
-  return Math.max(30, Math.round(s / speedMultiplier))
+  let s=BASE_INTERVAL
+  if(activeEffects.clockFast)s=Math.round(BASE_INTERVAL/1.5)
+  if(activeEffects.clockSlow)s=Math.round(BASE_INTERVAL/0.5)
+  return Math.max(30,Math.round(s/speedMultiplier))
 }
-
-function restartLoop(){
-  clearInterval(interval)
-  interval = setInterval(loop, getSpeed())
-}
-
+function restartLoop(){clearInterval(interval);interval=setInterval(loop,getSpeed())}
 function updateBonusBar(){
-  let bar = document.getElementById("bonusBar")
-  bar.innerHTML = ""
-  Object.keys(effectCountdowns).forEach(name => {
-    if(!activeEffects[name]) return
-    let d = document.createElement("div")
-    d.className = "bonus-ind " + BONUS_CLASS[name]
-    d.innerHTML = `${BONUS_LABELS[name]} <span class="btimer">${effectCountdowns[name]}s</span>`
+  let bar=document.getElementById("bonusBar");bar.innerHTML=""
+  Object.keys(effectCountdowns).forEach(n=>{
+    if(!activeEffects[n])return
+    let d=document.createElement("div");d.className="bonus-ind "+BONUS_CLASS[n]
+    d.innerHTML=`${BONUS_LABELS[n]} <span class="btimer">${effectCountdowns[n]}s</span>`
     bar.appendChild(d)
   })
 }
 
-/* ===== COUNTDOWN ===== */
-function startCountdown(callback){
-  let overlay = document.getElementById("countdownOverlay")
-  let numEl = document.getElementById("countdownNumber")
-  overlay.classList.remove("hidden")
-  isCountingDown = true
-  let count = 3
-  numEl.textContent = count
-  let timer = setInterval(()=>{
-    count--
-    if(count === 0){
-      numEl.textContent = "GO !"
-      numEl.style.color = "var(--neon-gold)"
-      numEl.style.textShadow = "0 0 40px var(--neon-gold)"
-    } else if(count < 0){
-      clearInterval(timer)
-      overlay.classList.add("hidden")
-      numEl.style.color = "var(--neon-green)"
-      numEl.style.textShadow = "0 0 40px var(--neon-green)"
-      isCountingDown = false
-      callback()
-    } else {
-      numEl.style.animation = "none"
-      numEl.offsetHeight
-      numEl.style.animation = "cdPop 0.4s ease"
-      numEl.textContent = count
-    }
-  }, 900)
+/* COUNTDOWN */
+function startCountdown(cb){
+  let ov=document.getElementById("countdownOverlay"),ne=document.getElementById("countdownNumber")
+  ov.classList.remove("hidden");isCountingDown=true;let c=3;ne.textContent=c
+  let t=setInterval(()=>{
+    c--
+    if(c===0){ne.textContent="GO !";ne.style.color="var(--neon-gold)";ne.style.textShadow="0 0 40px var(--neon-gold)"}
+    else if(c<0){clearInterval(t);ov.classList.add("hidden");ne.style.color="var(--neon-green)";ne.style.textShadow="0 0 40px var(--neon-green)";isCountingDown=false;cb()}
+    else{ne.style.animation="none";ne.offsetHeight;ne.style.animation="cdPop 0.4s ease";ne.textContent=c}
+  },900)
 }
 
-/* ===== PAUSE ===== */
-function togglePause(){ if(isPaused) resumeGame(); else pauseGame() }
-
+/* PAUSE */
+function togglePause(){if(isPaused)resumeGame();else pauseGame()}
 function pauseGame(){
-  if(isPaused || isCountingDown) return  // bloqué pendant countdown
-  isPaused = true
-  clearInterval(interval)
-  // Pause tous les timers de bonus (on sauvegarde le temps restant via effectCountdowns)
+  if(isPaused||isCountingDown)return
+  isPaused=true;clearInterval(interval)
   clearInterval(rainInterval)
-  // Pause le despawn du bonus sur la map
   clearTimeout(bonusDespawnTimer)
-  // Pause les countdowns d'effets
-  Object.keys(effectCDIntervals).forEach(k => clearInterval(effectCDIntervals[k]))
+  Object.keys(effectCDIntervals).forEach(k=>clearInterval(effectCDIntervals[k]))
   document.getElementById("pauseOverlay").classList.remove("hidden")
 }
-
 function resumeGame(){
-  document.getElementById("pauseOverlay").classList.add("hidden")
-  isPaused = false
-  // Relancer les countdowns d'effets actifs avec le temps restant
-  Object.keys(effectCountdowns).forEach(name => {
-    if(!activeEffects[name]) return
-    effectCDIntervals[name] = setInterval(()=>{
-      effectCountdowns[name]--
-      updateBonusBar()
-      if(effectCountdowns[name] <= 0) clearInterval(effectCDIntervals[name])
-    }, 1000)
+  document.getElementById("pauseOverlay").classList.add("hidden");isPaused=false
+  Object.keys(effectCountdowns).forEach(name=>{
+    if(!activeEffects[name])return
+    effectCDIntervals[name]=setInterval(()=>{effectCountdowns[name]--;updateBonusBar();if(effectCountdowns[name]<=0)clearInterval(effectCDIntervals[name])},1000)
   })
-  // Relancer la pluie si active
-  if(activeEffects.rain && !rainInterval){
-    rainInterval = setInterval(()=>{
-      if(extraFoods.length < 10){
-        let p = randomFreeCell()
-        extraFoods.push({x:p.x, y:p.y, gold:Math.random()<0.2})
-      }
-    }, 1000)
-  }
-  // Relancer le despawn du bonus sur la map avec le temps restant approximatif
-  if(bonusOnMap){
-    bonusDespawnTimer = setTimeout(()=>{
-      bonusOnMap = null
-      scheduleBonusSpawn()
-    }, (effectCountdowns['_bonusMap'] || 5) * 1000)
-  }
-  startCountdown(()=>{ interval = setInterval(loop, getSpeed()) })
+  if(activeEffects.rain&&!rainInterval)rainInterval=setInterval(()=>{if(extraFoods.length<10)extraFoods.push(randomExtraFood())},1000)
+  if(bonusOnMap)bonusDespawnTimer=setTimeout(()=>{bonusOnMap=null;scheduleBonusSpawn()},(effectCountdowns['_bmap']||5)*1000)
+  startCountdown(()=>{interval=setInterval(loop,getSpeed())})
 }
-
 function quitToMenu(){
-  clearInterval(interval)
-  clearAllBonuses()
-  isPaused = false
+  clearInterval(interval);clearAllBonuses();isPaused=false
   document.getElementById("pauseOverlay").classList.add("hidden")
   document.getElementById("pauseBtn").classList.add("hidden")
   document.getElementById("countdownOverlay").classList.add("hidden")
-  showScreen('screenMenu')
-  loadUserData().then(updateBestScoreDisplay)
+  showScreen('screenMenu');loadUserData().then(updateBestScoreDisplay)
 }
 
-/* ===== CONTROLS ===== */
-document.addEventListener("keydown", e => {
-  if(e.key === "Escape"){
-    if(isCountingDown) return  // pas de pause pendant countdown
-    let gameVisible = !document.getElementById("screenGame").classList.contains("hidden")
-    if(gameVisible) togglePause()
+/* CONTROLS */
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"){
+    if(isCountingDown)return
+    if(!document.getElementById("screenGame").classList.contains("hidden"))togglePause()
     return
   }
   handleDirection(e.key)
 })
-
-function handleDirection(key){
-  if(isPaused) return
-  if((key==="ArrowUp"||key==="w") && dy===0 && nextDy===0){ nextDx=0; nextDy=-gridSize }
-  if((key==="ArrowDown"||key==="s") && dy===0 && nextDy===0){ nextDx=0; nextDy=gridSize }
-  if((key==="ArrowLeft"||key==="a") && dx===0 && nextDx===0){ nextDx=-gridSize; nextDy=0 }
-  if((key==="ArrowRight"||key==="d") && dx===0 && nextDx===0){ nextDx=gridSize; nextDy=0 }
-}
-
-function mobileDir(dir){
-  if(isPaused) return
-  if(dir==="up" && dy===0 && nextDy===0){ nextDx=0; nextDy=-gridSize }
-  if(dir==="down" && dy===0 && nextDy===0){ nextDx=0; nextDy=gridSize }
-  if(dir==="left" && dx===0 && nextDx===0){ nextDx=-gridSize; nextDy=0 }
-  if(dir==="right" && dx===0 && nextDx===0){ nextDx=gridSize; nextDy=0 }
-}
-
-let startX=0, startY=0
-canvas.addEventListener("touchstart", e=>{startX=e.touches[0].clientX;startY=e.touches[0].clientY},{passive:true})
-canvas.addEventListener("touchend", e=>{
-  if(isPaused) return
-  let diffX = e.changedTouches[0].clientX - startX
-  let diffY = e.changedTouches[0].clientY - startY
-  if(Math.abs(diffX)>Math.abs(diffY)){
-    if(diffX>0 && dx===0 && nextDx===0){nextDx=gridSize;nextDy=0}
-    else if(diffX<0 && dx===0 && nextDx===0){nextDx=-gridSize;nextDy=0}
-  }else{
-    if(diffY>0 && dy===0 && nextDy===0){nextDx=0;nextDy=gridSize}
-    else if(diffY<0 && dy===0 && nextDy===0){nextDx=0;nextDy=-gridSize}
+document.addEventListener("visibilitychange",()=>{
+  if(document.hidden&&!isCountingDown){
+    if(!document.getElementById("screenGame").classList.contains("hidden")&&!isPaused)pauseGame()
   }
+})
+function handleDirection(key){
+  if(isPaused)return
+  if((key==="ArrowUp"||key==="w")&&dy===0&&nextDy===0){nextDx=0;nextDy=-gridSize}
+  if((key==="ArrowDown"||key==="s")&&dy===0&&nextDy===0){nextDx=0;nextDy=gridSize}
+  if((key==="ArrowLeft"||key==="a")&&dx===0&&nextDx===0){nextDx=-gridSize;nextDy=0}
+  if((key==="ArrowRight"||key==="d")&&dx===0&&nextDx===0){nextDx=gridSize;nextDy=0}
+}
+function mobileDir(dir){
+  if(isPaused)return
+  if(dir==="up"&&dy===0&&nextDy===0){nextDx=0;nextDy=-gridSize}
+  if(dir==="down"&&dy===0&&nextDy===0){nextDx=0;nextDy=gridSize}
+  if(dir==="left"&&dx===0&&nextDx===0){nextDx=-gridSize;nextDy=0}
+  if(dir==="right"&&dx===0&&nextDx===0){nextDx=gridSize;nextDy=0}
+}
+let startX=0,startY=0
+canvas.addEventListener("touchstart",e=>{startX=e.touches[0].clientX;startY=e.touches[0].clientY},{passive:true})
+canvas.addEventListener("touchend",e=>{
+  if(isPaused)return
+  let dX=e.changedTouches[0].clientX-startX,dY=e.changedTouches[0].clientY-startY
+  if(Math.abs(dX)>Math.abs(dY)){if(dX>0&&dx===0&&nextDx===0){nextDx=gridSize;nextDy=0}else if(dX<0&&dx===0&&nextDx===0){nextDx=-gridSize;nextDy=0}}
+  else{if(dY>0&&dy===0&&nextDy===0){nextDx=0;nextDy=gridSize}else if(dY<0&&dy===0&&nextDy===0){nextDx=0;nextDy=-gridSize}}
 },{passive:true})
 
-/* ===== LOOP ===== */
+/* LOOP SOLO */
 function loop(){
-  dx = nextDx; dy = nextDy
-  directionChanged = false
-
-  let head = {x:snake[0].x+dx, y:snake[0].y+dy}
-  let canPhase = activeEffects.phantom || activeEffects.star
-
-  // Murs
+  dx=nextDx;dy=nextDy;directionChanged=false
+  let head={x:snake[0].x+dx,y:snake[0].y+dy}
+  let canPhase=activeEffects.phantom||activeEffects.star
   if(head.x<0||head.x>=400||head.y<0||head.y>=400){
-    if(canPhase){
-      if(head.x<0) head.x=400-gridSize
-      else if(head.x>=400) head.x=0
-      if(head.y<0) head.y=400-gridSize
-      else if(head.y>=400) head.y=0
-    } else { gameOver(); return }
+    if(canPhase){if(head.x<0)head.x=400-gridSize;else if(head.x>=400)head.x=0;if(head.y<0)head.y=400-gridSize;else if(head.y>=400)head.y=0}
+    else{gameOver();return}
   }
-
-  // Collision queue
-  for(let i=1; i<snake.length; i++){
-    if(head.x===snake[i].x && head.y===snake[i].y){
-      if(!canPhase){ gameOver(); return }
-    }
-  }
-
+  for(let i=1;i<snake.length;i++){if(head.x===snake[i].x&&head.y===snake[i].y){if(!canPhase){gameOver();return}}}
   snake.unshift(head)
-  let ate = false
-
-  // Nourriture principale
-  if(head.x===food.x && head.y===food.y){
-    let pts = getFoodPts(food) * (activeEffects.star ? 2 : 1)
-    score += pts; sessionFruits += pts
-    // Salade : réduit la queue
-    if(food.type === 'salad' && snake.length > 1) snake.pop()
-    food = randomFood()
-    ate = true
+  let ate=false
+  if(head.x===food.x&&head.y===food.y){
+    let pts=getFoodPts(food)*(activeEffects.star?2:1);score+=pts;sessionFruits+=pts
+    if(food.type==='salad'&&snake.length>1)snake.pop()
+    food=randomFood();ate=true
   }
-
-  // Extra foods (pluie de pommes)
-  for(let i=extraFoods.length-1; i>=0; i--){
-    let ef = extraFoods[i]
-    if(head.x===ef.x && head.y===ef.y){
-      let pts = getFoodPts(ef) * (activeEffects.star ? 2 : 1)
-      score += pts; sessionFruits += pts
-      extraFoods.splice(i,1)
-      ate = true
+  for(let i=extraFoods.length-1;i>=0;i--){
+    let ef=extraFoods[i]
+    if(head.x===ef.x&&head.y===ef.y){
+      let pts=getFoodPts(ef)*(activeEffects.star?2:1);score+=pts;sessionFruits+=pts
+      if(ef.type==='salad'&&snake.length>1)snake.pop()
+      extraFoods.splice(i,1);ate=true
     }
   }
-
-  // Ramasser un bonus
-  if(bonusOnMap && head.x===bonusOnMap.x && head.y===bonusOnMap.y){
-    activateBonus(bonusOnMap.type)
-  }
-
-  if(!ate) snake.pop()
-
-  // Affichages
-  document.getElementById("scoreDisplay").innerText = score
-  document.getElementById("tailDisplay").innerText = snake.length
-  let best = userData ? (userData.bestScore || 0) : 0
-  if(score > best) document.getElementById("bestInGame").innerText = score
-
-  // Couleur classique
-  if(mode==="classic" && !activeEffects.star)
-    snakeColor = colors[Math.floor(score/10)%colors.length]
-
-  // Win aventure
-  if(mode==="adventure" && score>=levelGoal){ winLevel(); return }
-
-  // Reset queue à 100
-  if(snake.length >= 100) resetSnake()
-
+  if(bonusOnMap&&head.x===bonusOnMap.x&&head.y===bonusOnMap.y)activateBonus(bonusOnMap.type)
+  if(!ate)snake.pop()
+  document.getElementById("scoreDisplay").innerText=score
+  document.getElementById("tailDisplay").innerText=snake.length
+  let best=userData?(userData.bestScore||0):0
+  if(score>best)document.getElementById("bestInGame").innerText=score
+  if(mode==="classic"&&!activeEffects.star)snakeColor=colors[Math.floor(score/10)%colors.length]
+  if(mode==="adventure"&&score>=levelGoal){winLevel();return}
+  if(snake.length>=100)resetSnake()
   draw()
 }
-
-/* ===== POINTS PAR NOURRITURE ===== */
-function getFoodPts(f){
-  if(f.type==='gold')    return 3
-  if(f.type==='diamond') return 5
-  if(f.type==='rainbow') return 10
-  if(f.type==='salad')   return 1
-  return 1  // normal
-}
-
-/* ===== RESET QUEUE 100 ===== */
 function resetSnake(){
-  let hx = snake[0].x, hy = snake[0].y
-  snake = [{x:hx, y:hy}]
-  speedMultiplier *= 1.1
-  canvas.classList.remove('reset-flash')
-  void canvas.offsetWidth
-  canvas.classList.add('reset-flash')
-  setTimeout(()=>canvas.classList.remove('reset-flash'), 1200)
-  restartLoop()
+  let hx=snake[0].x,hy=snake[0].y;snake=[{x:hx,y:hy}];speedMultiplier*=1.5
+  canvas.classList.remove('reset-flash');void canvas.offsetWidth;canvas.classList.add('reset-flash')
+  setTimeout(()=>canvas.classList.remove('reset-flash'),1200);restartLoop()
 }
 
-/* ===== DESSIN ===== */
+/* DRAW SOLO */
 function draw(){
-  ctx.fillStyle="#0a0f0a"
-  ctx.fillRect(0,0,400,400)
-
-  ctx.strokeStyle = "rgba(0,255,136,0.03)"
-  ctx.lineWidth = 1
+  ctx.fillStyle="#0a0f0a";ctx.fillRect(0,0,400,400)
+  ctx.strokeStyle="rgba(0,255,136,0.03)";ctx.lineWidth=1
   for(let x=0;x<400;x+=gridSize){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,400);ctx.stroke()}
   for(let y=0;y<400;y+=gridSize){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(400,y);ctx.stroke()}
-
-  // Nourriture principale
-  drawFood(food)
-  // Extra foods
-  extraFoods.forEach(f => drawFood(f))
-  // Bonus sur la map
-  if(bonusOnMap) drawBonusItem(bonusOnMap)
-
-  // Couleur arc-en-ciel si star actif
-  if(activeEffects.star) snakeColor = `hsl(${(Date.now()/5)%360},100%,60%)`
-
-  // Serpent
+  drawFood(food);extraFoods.forEach(f=>drawFood(f))
+  if(bonusOnMap)drawBonusItem(bonusOnMap)
+  if(activeEffects.star)snakeColor=`hsl(${(Date.now()/5)%360},100%,60%)`
   snake.forEach((p,i)=>{
-    if(i===0){
-      ctx.fillStyle = snakeColor
-      ctx.fillRect(p.x,p.y,gridSize,gridSize)
-      try{ctx.drawImage(snakeHeadImg,p.x,p.y,gridSize,gridSize)}catch{}
-    }else{
-      let alpha = Math.max(0.4, 1 - i/snake.length * 0.6)
-      ctx.globalAlpha = alpha
-      ctx.fillStyle = snakeColor
-      ctx.fillRect(p.x+1,p.y+1,gridSize-2,gridSize-2)
-      ctx.globalAlpha = 1
-    }
+    if(i===0){ctx.fillStyle=snakeColor;ctx.fillRect(p.x,p.y,gridSize,gridSize);try{ctx.drawImage(snakeHeadImg,p.x,p.y,gridSize,gridSize)}catch{}}
+    else{let a=Math.max(0.4,1-i/snake.length*0.6);ctx.globalAlpha=a;ctx.fillStyle=snakeColor;ctx.fillRect(p.x+1,p.y+1,gridSize-2,gridSize-2);ctx.globalAlpha=1}
   })
-
-  // Texte INVINCIBLE x2 si star actif
   if(activeEffects.star){
-    ctx.save()
-    ctx.font = "bold 11px 'Orbitron',monospace"
-    ctx.textAlign = "center"
-    ctx.fillStyle = `hsl(${(Date.now()/3)%360},100%,70%)`
-    ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = 12
-    ctx.fillText("✦ INVINCIBLE & x2 FRUITS ✦", 200, 18)
-    ctx.restore()
+    ctx.save();ctx.font="bold 11px 'Orbitron',monospace";ctx.textAlign="center"
+    ctx.fillStyle=`hsl(${(Date.now()/3)%360},100%,70%)`;ctx.shadowColor=ctx.fillStyle;ctx.shadowBlur=12
+    ctx.fillText("✦ INVINCIBLE & x2 FRUITS ✦",200,18);ctx.restore()
   }
 }
-
 function drawFood(f){
-  if(f.type === 'rainbow'){
-    // Arc-en-ciel animé pur canvas - pas besoin d'image
-    let t = Date.now() / 300
-    let grad = ctx.createLinearGradient(f.x, f.y, f.x+gridSize, f.y+gridSize)
-    grad.addColorStop(0,   `hsl(${(t*60)%360},100%,60%)`)
-    grad.addColorStop(0.33,`hsl(${(t*60+120)%360},100%,60%)`)
-    grad.addColorStop(0.66,`hsl(${(t*60+240)%360},100%,60%)`)
-    grad.addColorStop(1,   `hsl(${(t*60+360)%360},100%,60%)`)
-    ctx.fillStyle = grad
-    ctx.beginPath()
-    ctx.roundRect(f.x+1, f.y+1, gridSize-2, gridSize-2, 4)
-    ctx.fill()
-    // Brillance pulsée
-    ctx.save()
-    ctx.globalAlpha = 0.4 + 0.3*Math.sin(Date.now()/150)
-    ctx.fillStyle = 'white'
-    ctx.beginPath()
-    ctx.arc(f.x+gridSize*0.3, f.y+gridSize*0.3, 2, 0, Math.PI*2)
-    ctx.fill()
-    ctx.restore()
-  } else if(f.type === 'diamond'){
-    try{ ctx.drawImage(diamondImg, f.x, f.y, gridSize, gridSize) }
-    catch{
-      // Fallback : losange cyan
-      ctx.fillStyle = '#00eeff'
-      ctx.save()
-      ctx.translate(f.x+gridSize/2, f.y+gridSize/2)
-      ctx.rotate(Math.PI/4)
-      ctx.fillRect(-gridSize*0.35, -gridSize*0.35, gridSize*0.7, gridSize*0.7)
-      ctx.restore()
+  if(f.type==='rainbow'){
+    let t=Date.now()/300,g=ctx.createLinearGradient(f.x,f.y,f.x+gridSize,f.y+gridSize)
+    g.addColorStop(0,`hsl(${(t*60)%360},100%,60%)`);g.addColorStop(0.33,`hsl(${(t*60+120)%360},100%,60%)`)
+    g.addColorStop(0.66,`hsl(${(t*60+240)%360},100%,60%)`);g.addColorStop(1,`hsl(${(t*60+360)%360},100%,60%)`)
+    ctx.fillStyle=g
+    if(ctx.roundRect){ctx.beginPath();ctx.roundRect(f.x+1,f.y+1,gridSize-2,gridSize-2,4);ctx.fill()}
+    else ctx.fillRect(f.x+1,f.y+1,gridSize-2,gridSize-2)
+    ctx.save();ctx.globalAlpha=0.4+0.3*Math.sin(Date.now()/150);ctx.fillStyle='white'
+    ctx.beginPath();ctx.arc(f.x+gridSize*0.3,f.y+gridSize*0.3,2,0,Math.PI*2);ctx.fill();ctx.restore()
+  } else if(f.type==='diamond'){
+    try{ctx.drawImage(diamondImg,f.x,f.y,gridSize,gridSize)}catch{
+      ctx.fillStyle='#00eeff';ctx.save();ctx.translate(f.x+gridSize/2,f.y+gridSize/2);ctx.rotate(Math.PI/4)
+      ctx.fillRect(-gridSize*0.35,-gridSize*0.35,gridSize*0.7,gridSize*0.7);ctx.restore()
     }
-  } else if(f.type === 'salad'){
-    try{ ctx.drawImage(sladImg, f.x, f.y, gridSize, gridSize) }
-    catch{
-      // Fallback : carré vert salade
-      ctx.fillStyle = '#7ec850'
-      ctx.fillRect(f.x+1, f.y+1, gridSize-2, gridSize-2)
-    }
-  } else if(f.type === 'gold'){
-    try{ ctx.drawImage(goldenAppleImg, f.x, f.y, gridSize, gridSize) }
-    catch{ ctx.fillStyle='gold'; ctx.fillRect(f.x,f.y,gridSize,gridSize) }
+  } else if(f.type==='salad'){
+    try{ctx.drawImage(saladImg,f.x,f.y,gridSize,gridSize)}catch{ctx.fillStyle='#7ec850';ctx.fillRect(f.x+1,f.y+1,gridSize-2,gridSize-2)}
+  } else if(f.type==='gold'){
+    try{ctx.drawImage(goldenAppleImg,f.x,f.y,gridSize,gridSize)}catch{ctx.fillStyle='gold';ctx.fillRect(f.x,f.y,gridSize,gridSize)}
   } else {
-    // normal (et fallback pour extra foods sans type)
-    let isGold = f.gold === true
-    try{ ctx.drawImage(isGold ? goldenAppleImg : appleImg, f.x, f.y, gridSize, gridSize) }
-    catch{ ctx.fillStyle=isGold?"gold":"#ff4444"; ctx.fillRect(f.x,f.y,gridSize,gridSize) }
+    let ig=f.gold===true
+    try{ctx.drawImage(ig?goldenAppleImg:appleImg,f.x,f.y,gridSize,gridSize)}catch{ctx.fillStyle=ig?"gold":"#ff4444";ctx.fillRect(f.x,f.y,gridSize,gridSize)}
   }
 }
-
 function drawBonusItem(b){
-  let img = b.type==='phantom' ? phantomImg : b.type==='clock' ? clockImg : b.type==='rain' ? fruitRainImg : starImg
-  let col = BONUS_COLORS[b.type] || 'white'
-  try{ ctx.drawImage(img, b.x, b.y, gridSize, gridSize) }
-  catch{ ctx.fillStyle=col; ctx.fillRect(b.x,b.y,gridSize,gridSize) }
-  // Lueur pulsée autour du bonus
-  ctx.save()
-  ctx.strokeStyle = col
-  ctx.globalAlpha = 0.35 + 0.3*Math.sin(Date.now()/200)
-  ctx.lineWidth = 2
-  ctx.strokeRect(b.x-1, b.y-1, gridSize+2, gridSize+2)
-  ctx.restore()
+  let img=b.type==='phantom'?phantomImg:b.type==='clock'?clockImg:b.type==='rain'?fruitRainImg:starImg
+  let col=BONUS_COLORS[b.type]||'white'
+  try{ctx.drawImage(img,b.x,b.y,gridSize,gridSize)}catch{ctx.fillStyle=col;ctx.fillRect(b.x,b.y,gridSize,gridSize)}
+  ctx.save();ctx.strokeStyle=col;ctx.globalAlpha=0.35+0.3*Math.sin(Date.now()/200);ctx.lineWidth=2
+  ctx.strokeRect(b.x-1,b.y-1,gridSize+2,gridSize+2);ctx.restore()
 }
 
-/* ===== GAME OVER / WIN ===== */
+/* GAMEOVER / WIN */
 async function gameOver(){
-  clearInterval(interval)
-  clearAllBonuses()
+  clearInterval(interval);clearAllBonuses()
   document.getElementById("pauseBtn").classList.add("hidden")
   await saveData(null)
-  let best = userData ? (userData.bestScore || 0) : 0
-  document.getElementById("goScore").innerText = "Score : " + score
-  document.getElementById("goSub").innerText = score > best ? "🎉 Nouveau record !" : "Meilleur : " + Math.max(best, score)
+  let best=userData?(userData.bestScore||0):0
+  document.getElementById("goScore").innerText="Score : "+score
+  document.getElementById("goSub").innerText=score>best?"🎉 Nouveau record !":"Meilleur : "+Math.max(best,score)
   showScreen('screenGameover')
 }
-
 async function winLevel(){
-  clearInterval(interval)
-  clearAllBonuses()
+  clearInterval(interval);clearAllBonuses()
   document.getElementById("pauseBtn").classList.add("hidden")
   await saveData(level)
-  document.getElementById("winScore").innerText = "Score : " + score
-  document.getElementById("winSub").innerText = "Niveau " + level + " complété !"
+  document.getElementById("winScore").innerText="Score : "+score
+  document.getElementById("winSub").innerText="Niveau "+level+" complété !"
   showScreen('screenWin')
 }
-
-function nextLevel(){
-  level++
-  if(level>10){ goToMenu(); return }
-  startAdventure(level)
-}
-
-function restartLevel(){
-  if(mode==="adventure") startAdventure(level)
-  else startClassic()
-}
-
-/* ===== RETOUR MENU ===== */
+function nextLevel(){level++;if(level>10){goToMenu();return}startAdventure(level)}
+function restartLevel(){if(mode==="adventure")startAdventure(level);else startClassic()}
 function goToMenu(){
-  clearInterval(interval)
-  clearAllBonuses()
-  isPaused = false
+  clearInterval(interval);clearAllBonuses();isPaused=false
   document.getElementById("pauseBtn").classList.add("hidden")
   document.getElementById("pauseOverlay").classList.add("hidden")
   document.getElementById("countdownOverlay").classList.add("hidden")
-  showScreen('screenMenu')
-  loadUserData().then(updateBestScoreDisplay)
+  showScreen('screenMenu');loadUserData().then(updateBestScoreDisplay)
 }
 
-/* ===== LEADERBOARD ===== */
+/* LEADERBOARD */
 async function showLeaderboard(){
   showScreen('screenLeaderboard')
-  let list = document.getElementById("leaderboardList")
-  list.innerHTML = '<div style="font-size:10px;color:rgba(255,255,255,0.4)">Chargement...</div>'
+  let list=document.getElementById("leaderboardList")
+  list.innerHTML='<div style="font-size:10px;color:rgba(255,255,255,0.4)">Chargement...</div>'
   try{
-    let snap = await db.collection("users").orderBy("bestScore","desc").limit(10).get()
-    list.innerHTML = ""
-    let rank = 1
-    let medals = ["🥇","🥈","🥉"]
+    let snap=await db.collection("users").orderBy("bestScore","desc").limit(10).get()
+    list.innerHTML="";let rank=1,medals=["🥇","🥈","🥉"]
     snap.forEach(doc=>{
-      let d = doc.data()
-      let div = document.createElement("div")
-      div.className = "lb-entry" + (rank<=3?" rank-"+rank:"") + (doc.id===currentUser?" me":"")
-      div.innerHTML = `
-        <div class="lb-rank">${medals[rank-1]||rank}</div>
-        <div class="lb-name">${doc.id}${doc.id===currentUser?' <span style="font-size:8px;color:var(--neon-blue)">(moi)</span>':''}</div>
-        <div class="lb-score">${d.bestScore}</div>
-      `
-      list.appendChild(div)
-      rank++
+      let d=doc.data(),div=document.createElement("div")
+      div.className="lb-entry"+(rank<=3?" rank-"+rank:"")+(doc.id===currentUser?" me":"")
+      div.innerHTML=`<div class="lb-rank">${medals[rank-1]||rank}</div><div class="lb-name">${doc.id}${doc.id===currentUser?' <span style="font-size:8px;color:var(--neon-blue)">(moi)</span>':''}</div><div class="lb-score">${d.bestScore}</div>`
+      list.appendChild(div);rank++
     })
-    if(snap.empty) list.innerHTML = '<div style="font-size:10px;color:rgba(255,255,255,0.3)">Aucun score enregistré</div>'
-  }catch(e){
-    list.innerHTML = '<div style="color:var(--neon-pink);font-size:10px">Erreur de chargement</div>'
-  }
+    if(snap.empty)list.innerHTML='<div style="font-size:10px;color:rgba(255,255,255,0.3)">Aucun score</div>'
+  }catch{list.innerHTML='<div style="color:var(--neon-pink);font-size:10px">Erreur</div>'}
 }
-
-/* ===== PROFIL ===== */
 async function showProfile(){
-  showScreen('screenProfile')
-  if(!userData) await loadUserData()
-  document.getElementById("profileName").innerText = currentUser
-  document.getElementById("profileBest").innerText = userData.bestScore || 0
-  document.getElementById("profileFruits").innerText = userData.totalFruits || 0
-  document.getElementById("profileLevels").innerText = (userData.completedLevels || []).length
+  showScreen('screenProfile'); if(!userData)await loadUserData()
+  document.getElementById("profileName").innerText=currentUser
+  document.getElementById("profileBest").innerText=userData.bestScore||0
+  document.getElementById("profileFruits").innerText=userData.totalFruits||0
+  document.getElementById("profileLevels").innerText=(userData.completedLevels||[]).length
   try{
-    let snap = await db.collection("users").orderBy("bestScore","desc").get()
-    let rank = 1
-    snap.forEach(doc=>{ if(doc.id!==currentUser && doc.data().bestScore > (userData.bestScore||0)) rank++ })
-    document.getElementById("profileRank").innerText = "Classement mondial : #" + rank
+    let snap=await db.collection("users").orderBy("bestScore","desc").get()
+    let rank=1;snap.forEach(doc=>{if(doc.id!==currentUser&&doc.data().bestScore>(userData.bestScore||0))rank++})
+    document.getElementById("profileRank").innerText="Classement mondial : #"+rank
   }catch{}
 }
 
+/* ========================================================
+   ===== MODE ONLINE =====
+   ======================================================== */
+const ONLINE_MAP=800, ONLINE_GRID=20, ONLINE_COLS=ONLINE_MAP/ONLINE_GRID
+const PLAYER_COLORS=['#00ff88','#00c3ff','#ff0080','#ffd700','#a78bfa','#f97316','#34d399','#ff6b6b']
+
+let currentLobbyId=null, isLobbyChef=false, lobbyData=null
+let lobbyRef=null, lobbyUnsubscribe=null
+let allLobbiesRef=null, allLobbiesUnsubscribe=null
+
+// Online game state
+let oCanvas=document.getElementById("onlineCanvas")
+let oCtx=oCanvas.getContext("2d")
+let oSnake=[], oFood=[], oPlayers={}, oMyColor='lime'
+let oScore=0, oTail=1, oInterval=null, oTimerInterval=null
+let oTimeLeft=180, oGameDuration=180
+let oDx=ONLINE_GRID, oDy=0, oNextDx=ONLINE_GRID, oNextDy=0
+let oAlive=true, oInvincible=false, oInvincibleTimer=null, oInvincibleCountdown=0
+let oSpeedMult=1
+
+/* ---- LOBBY LIST ---- */
+function showOnlineHub(){
+  showScreen('screenOnlineHub')
+  loadLobbies()
+}
+
+let allLobbiesData={}
+function loadLobbies(){
+  if(allLobbiesRef) allLobbiesRef.off()
+  allLobbiesRef=rtdb.ref('lobbies')
+  allLobbiesRef.on('value',snap=>{
+    allLobbiesData=snap.val()||{}
+    renderLobbies(allLobbiesData)
+  })
+}
+
+function renderLobbies(data){
+  let list=document.getElementById("lobbyList")
+  let search=document.getElementById("lobbySearchInput").value.toLowerCase()
+  list.innerHTML=""
+  let entries=Object.entries(data).filter(([id,l])=>l&&l.status==='waiting'&&l.name&&l.chef)
+  if(search)entries=entries.filter(([id,l])=>l.name.toLowerCase().includes(search))
+  if(entries.length===0){
+    list.innerHTML='<div style="font-size:10px;color:rgba(255,255,255,0.3);text-align:center;padding:20px">Aucun lobby disponible</div>'
+    return
+  }
+  entries.forEach(([id,l])=>{
+    let count=Object.keys(l.players||{}).length
+    let full=count>=l.maxPlayers
+    let div=document.createElement("div")
+    div.className="lobby-card"+(full?" full":"")
+    let mins=Math.floor(l.duration/60),secs=l.duration%60
+    div.innerHTML=`
+      <div>
+        <div class="lobby-name">${l.name}</div>
+        <div class="lobby-info">⏱ ${mins}min${secs?secs+'s':''} · Chef: ${l.chef}</div>
+      </div>
+      <div class="lobby-players">${count}/${l.maxPlayers}</div>
+    `
+    if(!full)div.onclick=()=>joinLobby(id,l)
+    list.appendChild(div)
+  })
+}
+
+function filterLobbies(){renderLobbies(allLobbiesData)}
+
+/* ---- CREATE LOBBY ---- */
+async function createLobby(){
+  let name=document.getElementById("lobbyNameInput").value.trim()
+  let max=parseInt(document.getElementById("lobbyMaxPlayers").value)
+  let dur=parseInt(document.getElementById("lobbyDuration").value)
+  if(name.length<5||name.length>15){setMsg("createMsg","Nom entre 5 et 15 caractères","error");return}
+  if(/[^a-zA-Z0-9_ -]/.test(name)){setMsg("createMsg","Nom invalide","error");return}
+  // Vérif unicité nom
+  let snap=await rtdb.ref('lobbies').orderByChild('name').equalTo(name).once('value')
+  if(snap.exists()){setMsg("createMsg","Ce nom de lobby est déjà pris","error");return}
+  let lobbyId='lobby_'+Date.now()+'_'+currentUser
+  let lobbyObj={
+    name,maxPlayers:max,duration:dur,chef:currentUser,
+    status:'waiting',createdAt:Date.now(),
+    players:{[currentUser]:{name:currentUser,ready:false,score:0,tail:1,color:PLAYER_COLORS[0]}}
+  }
+  await rtdb.ref('lobbies/'+lobbyId).set(lobbyObj)
+  currentLobbyId=lobbyId; isLobbyChef=true
+  enterLobbyRoom(lobbyId)
+}
+
+/* ---- JOIN LOBBY ---- */
+function joinLobby(id,l){
+  let count=Object.keys(l.players||{}).length
+  if(count>=l.maxPlayers){setMsg("hubMsg","Lobby plein","error");return}
+  // Assigner couleur
+  let usedColors=Object.values(l.players||{}).map(p=>p.color)
+  let myColor=PLAYER_COLORS.find(c=>!usedColors.includes(c))||PLAYER_COLORS[count%PLAYER_COLORS.length]
+  rtdb.ref('lobbies/'+id+'/players/'+currentUser).set({name:currentUser,ready:false,score:0,tail:1,color:myColor})
+  currentLobbyId=id; isLobbyChef=false
+  enterLobbyRoom(id)
+}
+
+/* ---- LOBBY ROOM ---- */
+function enterLobbyRoom(id){
+  showScreen('screenLobbyRoom')
+  lobbyRef=rtdb.ref('lobbies/'+id)
+  if(lobbyUnsubscribe)lobbyUnsubscribe()
+  lobbyRef.on('value',snap=>{
+    if(!snap.exists()){
+      // Lobby supprimé (chef parti)
+      setMsg("lobbyMsg","Le lobby a été fermé","error")
+      setTimeout(()=>{currentLobbyId=null;showScreen('screenOnlineHub');loadLobbies()},2000)
+      return
+    }
+    lobbyData=snap.val()
+    renderLobbyRoom(lobbyData)
+    // Chef a lancé ?
+    if(lobbyData.status==='starting'){
+      startOnlineGameClient(lobbyData)
+    }
+  })
+}
+
+function renderLobbyRoom(l){
+  document.getElementById("lobbyRoomTitle").innerText=l.name
+  let count=Object.keys(l.players||{}).length
+  let mins=Math.floor(l.duration/60),secs=l.duration%60
+  document.getElementById("lobbyRoomInfo").innerText=`${count}/${l.maxPlayers} joueurs · ${mins}min${secs?secs+'s':''}`
+  // Players
+  let pl=document.getElementById("lobbyPlayerList");pl.innerHTML=""
+  Object.values(l.players||{}).forEach(p=>{
+    let row=document.createElement("div")
+    row.className="player-row"+(p.name===l.chef?" chef":"")
+    row.innerHTML=`
+      <div class="player-name">
+        <div style="width:12px;height:12px;border-radius:50%;background:${p.color||'lime'}"></div>
+        <span>${p.name}</span>
+        ${p.name===l.chef?'<span class="chef-badge">👑 Chef</span>':''}
+      </div>
+      ${isLobbyChef&&p.name!==currentUser?`<button class="btn btn-danger" style="padding:4px 10px;font-size:10px;margin:0" onclick="kickPlayer('${p.name}')">Kick</button>`:''}
+    `
+    pl.appendChild(row)
+  })
+  // Contrôles chef
+  let cc=document.getElementById("lobbyChefControls")
+  if(isLobbyChef){
+    cc.classList.remove("hidden");cc.style.display="flex"
+    let btn=document.getElementById("startOnlineBtn")
+    btn.disabled=count<2
+    btn.style.opacity=count<2?'0.4':'1'
+  } else {
+    cc.classList.add("hidden")
+  }
+}
+
+function kickPlayer(name){
+  if(!isLobbyChef)return
+  rtdb.ref('lobbies/'+currentLobbyId+'/players/'+name).remove()
+}
+
+function leaveLobby(){
+  if(!currentLobbyId)return
+  if(lobbyRef)lobbyRef.off()
+  // Retirer présence si on quitte pendant une partie
+  rtdb.ref('lobbies/'+currentLobbyId+'/presence/'+currentUser).remove()
+  if(isLobbyChef){
+    rtdb.ref('lobbies/'+currentLobbyId).remove()
+  } else {
+    rtdb.ref('lobbies/'+currentLobbyId+'/players/'+currentUser).remove()
+  }
+  currentLobbyId=null;isLobbyChef=false;lobbyData=null
+  showScreen('screenOnlineHub');loadLobbies()
+}
+
+/* ---- LAUNCH GAME (CHEF) ---- */
+async function launchOnlineGame(){
+  if(!isLobbyChef||!currentLobbyId)return
+  let snap=await rtdb.ref('lobbies/'+currentLobbyId).once('value')
+  let l=snap.val(); if(!l)return
+  let count=Object.keys(l.players||{}).length
+  if(count<2){setMsg("lobbyMsg","Minimum 2 joueurs","error");return}
+  // Générer spawns et food initiale
+  let spawns=generateSpawns(count)
+  let playerKeys=Object.keys(l.players)
+  let playersInit={}
+  playerKeys.forEach((name,i)=>{
+    playersInit[name]={
+      name,color:l.players[name].color,score:0,tail:1,alive:true,
+      snake:[spawns[i]],dx:ONLINE_GRID,dy:0
+    }
+  })
+  let foods=[]
+  for(let i=0;i<5;i++)foods.push(genOnlineFood([],playersInit))
+  await rtdb.ref('lobbies/'+currentLobbyId).update({
+    status:'starting',startedAt:Date.now(),
+    playersInit:playersInit,foods:JSON.stringify(foods)
+  })
+}
+
+function generateSpawns(count){
+  // Positions de spawn bien au centre de la map, loin des bords
+  let spots=[
+    {x:200,y:200},{x:560,y:200},{x:200,y:560},{x:560,y:560},
+    {x:380,y:140},{x:380,y:620},{x:140,y:380},{x:620,y:380}
+  ]
+  return spots.slice(0,count).map(s=>({
+    x:Math.round(s.x/ONLINE_GRID)*ONLINE_GRID,
+    y:Math.round(s.y/ONLINE_GRID)*ONLINE_GRID
+  }))
+}
+
+function genOnlineFood(existing,players){
+  let occ=[...existing]
+  if(players)Object.values(players).forEach(p=>{if(p.snake)occ.push(...p.snake)})
+  let pos,att=0
+  do{pos={x:Math.floor(Math.random()*ONLINE_COLS)*ONLINE_GRID,y:Math.floor(Math.random()*ONLINE_COLS)*ONLINE_GRID};att++}
+  while(att<300&&occ.some(p=>p&&p.x===pos.x&&p.y===pos.y))
+  let r=Math.random()
+  let type='normal'
+  if(r<1/20)type='rainbow'
+  else if(r<1/20+1/15)type='diamond'
+  else if(r<1/20+1/15+1/8)type='salad'
+  else if(r<1/20+1/15+1/8+1/10)type='gold'
+  return{x:pos.x,y:pos.y,type}
+}
+
+/* ---- START GAME CLIENT ---- */
+function startOnlineGameClient(l){
+  if(lobbyRef)lobbyRef.off()
+  // VS Screen
+  showScreen('screenOnlineVS')
+  let vsList=document.getElementById("vsPlayerList");vsList.innerHTML=""
+  let playerNames=Object.keys(l.players||{})
+  playerNames.forEach((name,i)=>{
+    let span=document.createElement("span")
+    span.style.color=l.players[name].color||'white'
+    span.textContent=name
+    if(i<playerNames.length-1){
+      vsList.appendChild(span)
+      let vs=document.createElement("span");vs.style.color='rgba(255,255,255,0.3)';vs.textContent=' VS '
+      vsList.appendChild(vs)
+    } else vsList.appendChild(span)
+  })
+  // Countdown 3,2,1 GO avant de lancer
+  setTimeout(()=>{
+    showScreen('screenOnlineVS') // garde l'écran VS pendant le countdown
+    let count=3
+    let vsTitle=document.querySelector('#screenOnlineVS .main-title')
+    if(vsTitle) vsTitle.innerText='⚔ VS'
+    // Afficher le countdown par dessus
+    let cdEl=document.getElementById("countdownOverlay")
+    let numEl=document.getElementById("countdownNumber")
+    cdEl.classList.remove("hidden")
+    numEl.textContent=count
+    numEl.style.color="var(--neon-green)"
+    numEl.style.textShadow="0 0 40px var(--neon-green)"
+    let t=setInterval(()=>{
+      count--
+      if(count===0){numEl.textContent="GO !";numEl.style.color="var(--neon-gold)";numEl.style.textShadow="0 0 40px var(--neon-gold)"}
+      else if(count<0){
+        clearInterval(t)
+        cdEl.classList.add("hidden")
+        numEl.style.color="var(--neon-green)";numEl.style.textShadow="0 0 40px var(--neon-green)"
+        launchOnlineLoop(l)
+      } else {
+        numEl.style.animation="none";numEl.offsetHeight;numEl.style.animation="cdPop 0.4s ease"
+        numEl.textContent=count
+      }
+    },900)
+  },2500)
+}
+
+function launchOnlineLoop(l){
+  // Init state
+  let pi=l.playersInit||{}
+  oPlayers=JSON.parse(JSON.stringify(pi))
+  oFood=JSON.parse(l.foods||'[]')
+  oMyColor=oPlayers[currentUser]?.color||'lime'
+  oSnake=oPlayers[currentUser]?.snake||[{x:400,y:400}]
+  oScore=0;oTail=1;oAlive=true;oInvincible=false
+  // Direction initiale vers le centre
+  let startHead=oSnake[0]||{x:400,y:400}
+  let cx=ONLINE_MAP/2, cy=ONLINE_MAP/2
+  if(Math.abs(startHead.x-cx)>Math.abs(startHead.y-cy)){
+    oDx=startHead.x<cx?ONLINE_GRID:-ONLINE_GRID; oDy=0
+    oNextDx=oDx; oNextDy=0
+  } else {
+    oDx=0; oDy=startHead.y<cy?ONLINE_GRID:-ONLINE_GRID
+    oNextDx=0; oNextDy=oDy
+  }
+  oSpeedMult=1
+  oTimeLeft=l.duration||180;oGameDuration=l.duration||180
+
+  // Show game
+  document.getElementById("onlineGame").classList.remove("hidden")
+  document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'))
+  document.getElementById("deathScreen").classList.add("hidden")
+  document.getElementById("onlineResultScreen").classList.add("hidden")
+  document.getElementById("invincibleBar").classList.add("hidden")
+  document.getElementById("killFeed").innerHTML=""
+
+  // ===== PRESENCE : détecter déconnexion =====
+  let presenceRef = rtdb.ref('lobbies/'+currentLobbyId+'/presence/'+currentUser)
+  presenceRef.onDisconnect().remove()
+  presenceRef.set(true)
+
+  // Surveiller la présence — si quelqu'un part, tout le monde retourne au menu
+  let presenceListRef = rtdb.ref('lobbies/'+currentLobbyId+'/presence')
+  presenceListRef.on('value', snap=>{
+    if(!oInterval) return // partie déjà terminée, ignorer
+    let present = snap.val() || {}
+    let presentNames = Object.keys(present)
+    let presentCount = presentNames.length
+    let totalPlayers = Object.keys(oPlayers).length
+
+    // Un joueur s'est déconnecté
+    if(presentCount < totalPlayers){
+      // Trouver qui est parti
+      Object.keys(oPlayers).forEach(name=>{
+        if(!present[name] && oPlayers[name]){
+          oPlayers[name].alive=false; oPlayers[name].snake=[]
+        }
+      })
+      // Si plus qu'un seul ou personne → fin de partie immédiate
+      if(presentCount <= 1){
+        presenceListRef.off()
+        clearInterval(oInterval);clearInterval(oTimerInterval)
+        oInterval=null;oTimerInterval=null
+        document.removeEventListener("keydown",onlineKeydown)
+        rtdb.ref('lobbies/'+currentLobbyId+'/presence/'+currentUser).remove()
+        // Envoyer signal déconnexion à tout le monde via RTDB
+        rtdb.ref('lobbies/'+currentLobbyId+'/disconnected').set(true)
+        document.getElementById("onlineGame").classList.add("hidden")
+        document.getElementById("deathScreen").classList.add("hidden")
+        document.getElementById("invincibleBar").classList.add("hidden")
+        document.getElementById("onlineResultScreen").classList.add("hidden")
+        document.getElementById("killFeed").innerHTML=""
+        showScreen('screenMenu')
+        loadUserData().then(updateBestScoreDisplay)
+        setTimeout(()=>alert("Un joueur s'est déconnecté, désolé !"),100)
+        if(isLobbyChef) rtdb.ref('lobbies/'+currentLobbyId).remove()
+        return
+      }
+    }
+  })
+
+  // Écouter signal déconnexion envoyé par quelqu'un d'autre
+  rtdb.ref('lobbies/'+currentLobbyId+'/disconnected').on('value', snap=>{
+    if(snap.val()===true && oInterval){
+      clearInterval(oInterval);clearInterval(oTimerInterval)
+      oInterval=null;oTimerInterval=null
+      document.removeEventListener("keydown",onlineKeydown)
+      rtdb.ref('lobbies/'+currentLobbyId+'/presence/'+currentUser).remove()
+      rtdb.ref('lobbies/'+currentLobbyId+'/disconnected').off()
+      presenceListRef.off()
+      document.getElementById("onlineGame").classList.add("hidden")
+      document.getElementById("deathScreen").classList.add("hidden")
+      document.getElementById("invincibleBar").classList.add("hidden")
+      document.getElementById("onlineResultScreen").classList.add("hidden")
+      document.getElementById("killFeed").innerHTML=""
+      showScreen('screenMenu')
+      loadUserData().then(updateBestScoreDisplay)
+      setTimeout(()=>alert("Un joueur s'est déconnecté, désolé !"),100)
+    }
+  })
+
+  // ===== FOOD SYNC =====
+  // Le chef gère la food et la publie, tous lisent depuis RTDB
+  let foodRef = rtdb.ref('lobbies/'+currentLobbyId+'/sharedFood')
+
+  if(isLobbyChef){
+    // Publier food initiale
+    foodRef.set(JSON.stringify(oFood))
+    // Spawner une nouvelle pomme toutes les secondes
+    let foodSpawnInterval = setInterval(()=>{
+      if(!oInterval){clearInterval(foodSpawnInterval);return}
+      if(oFood.length < 15){
+        oFood.push(genOnlineFood(oFood, oPlayers))
+        foodRef.set(JSON.stringify(oFood))
+      }
+    },1000)
+  } else {
+    // Non-chef : lire la food périodiquement MAIS ignorer si on vient de manger
+    // pour éviter que Firebase écrase notre suppression locale
+    let lastAteTime = 0
+    foodRef.on('value', snap=>{
+      if(!snap.val()) return
+      let now = Date.now()
+      // Ignorer les updates Firebase pendant 400ms après avoir mangé
+      // (le temps que notre propre publication soit reçue)
+      if(now - lastAteTime < 400) return
+      oFood = JSON.parse(snap.val())
+    })
+    // Exposer lastAteTime pour que onlineStep puisse le mettre à jour
+    window._onlineLastAteTime = ()=>{ lastAteTime = Date.now() }
+  }
+
+  // Sync avec RTDB - état des joueurs
+  let gameRef=rtdb.ref('lobbies/'+currentLobbyId+'/game')
+  oInterval=setInterval(()=>{
+    onlineStep(foodRef)
+    publishMyState(gameRef)
+    // Lire les autres joueurs
+    gameRef.once('value',snap=>{
+      let gdata=snap.val()||{}
+      Object.keys(gdata).forEach(name=>{
+        if(name===currentUser)return
+        let pd=gdata[name]
+        if(pd&&oPlayers[name]){
+          oPlayers[name].snake=pd.snake||[]
+          oPlayers[name].score=pd.score||0
+          oPlayers[name].tail=pd.tail||1
+          oPlayers[name].alive=pd.alive!==false
+        }
+      })
+    })
+    drawOnline()
+  },100)
+
+  // Timer
+  oTimerInterval=setInterval(()=>{
+    oTimeLeft--
+    updateOnlineHUD()
+    if(oTimeLeft<=0)endOnlineGame()
+  },1000)
+
+  // Controls online
+  document.addEventListener("keydown",onlineKeydown)
+}
+
+function publishMyState(ref){
+  ref.child(currentUser).set({
+    snake:oSnake,score:oScore,tail:oTail,alive:oAlive,
+    dx:oDx,dy:oDy,color:oMyColor
+  })
+}
+
+function onlineStep(foodRef){
+  if(!oAlive)return
+  oDx=oNextDx;oDy=oNextDy
+  let head={x:oSnake[0].x+oDx,y:oSnake[0].y+oDy}
+  // Murs = mort
+  if(head.x<0||head.x>=ONLINE_MAP||head.y<0||head.y>=ONLINE_MAP){
+    onlineDie("un mur 😬");return
+  }
+  // Collision ennemis (sauf invincible)
+  if(!oInvincible){
+    for(let name in oPlayers){
+      if(name===currentUser)continue
+      let ep=oPlayers[name]
+      if(!ep.alive)continue
+      let eSnake=ep.snake||[]
+      for(let seg of eSnake){
+        if(seg&&head.x===seg.x&&head.y===seg.y){
+          addKillFeed(`${name} a tué ${currentUser}`)
+          onlineDie(name);return
+        }
+      }
+    }
+  }
+  oSnake.unshift(head)
+  // Manger
+  let ate=false, foodChanged=false
+  for(let i=oFood.length-1;i>=0;i--){
+    let f=oFood[i]
+    if(f&&head.x===f.x&&head.y===f.y){
+      let pts=getOnlineFoodPts(f)
+      oScore+=pts
+      if(f.type==='salad'&&oSnake.length>1)oSnake.pop()
+      oFood.splice(i,1)
+      foodChanged=true
+      // Signaler qu'on vient de manger (pour bloquer le listener Firebase temporairement)
+      if(!isLobbyChef && window._onlineLastAteTime) window._onlineLastAteTime()
+      ate=true;break
+    }
+  }
+  if(!ate)oSnake.pop()
+  // Tout le monde publie la food quand il mange
+  if(foodChanged && foodRef){
+    foodRef.set(JSON.stringify(oFood))
+  }
+  oTail=oSnake.length
+  // Reset queue 100
+  if(oSnake.length>=100){
+    let h=oSnake[0];oSnake=[{x:h.x,y:h.y}];oTail=1;oSpeedMult*=1.5
+  }
+  updateOnlineHUD()
+}
+
+function getOnlineFoodPts(f){
+  if(f.type==='gold')return 3;if(f.type==='diamond')return 5;if(f.type==='rainbow')return 10;return 1
+}
+
+function onlineDie(killer){
+  oAlive=false;oScore=Math.max(0,oScore-10)
+  document.getElementById("deathScreen").classList.remove("hidden")
+  document.getElementById("deathMsg").innerText="Tu as été tué par "+killer
+  document.getElementById("deathBy").innerText=killer==="un mur 😬"?"Tu as foncé dans un mur !":""
+  let rt=5
+  document.getElementById("respawnTimer").innerText=rt
+  let ri=setInterval(()=>{
+    rt--;document.getElementById("respawnTimer").innerText=rt
+    if(rt<=0){clearInterval(ri);onlineRespawn()}
+  },1000)
+}
+
+function onlineRespawn(){
+  document.getElementById("deathScreen").classList.add("hidden")
+  // Spawn aléatoire mais loin des bords (marge de 5 cases)
+  let margin=5*ONLINE_GRID
+  let sx=Math.floor(Math.random()*((ONLINE_MAP-margin*2)/ONLINE_GRID))*ONLINE_GRID+margin
+  let sy=Math.floor(Math.random()*((ONLINE_MAP-margin*2)/ONLINE_GRID))*ONLINE_GRID+margin
+  oSnake=[{x:sx,y:sy}]
+  // Direction vers le centre pour ne pas foncer vers un mur
+  let cx=ONLINE_MAP/2, cy=ONLINE_MAP/2
+  if(Math.abs(sx-cx)>Math.abs(sy-cy)){
+    oDx=sx<cx?ONLINE_GRID:-ONLINE_GRID; oDy=0
+    oNextDx=oDx; oNextDy=0
+  } else {
+    oDx=0; oDy=sy<cy?ONLINE_GRID:-ONLINE_GRID
+    oNextDx=0; oNextDy=oDy
+  }
+  oAlive=true;oInvincible=true;oInvincibleCountdown=5
+  document.getElementById("invincibleBar").classList.remove("hidden")
+  document.getElementById("invincibleTimer").innerText=5
+  if(oInvincibleTimer)clearTimeout(oInvincibleTimer)
+  let ic=setInterval(()=>{
+    oInvincibleCountdown--;document.getElementById("invincibleTimer").innerText=oInvincibleCountdown
+    if(oInvincibleCountdown<=0){clearInterval(ic);oInvincible=false;document.getElementById("invincibleBar").classList.add("hidden")}
+  },1000)
+  oInvincibleTimer=setTimeout(()=>{oInvincible=false;document.getElementById("invincibleBar").classList.add("hidden")},5000)
+}
+
+function addKillFeed(msg){
+  let kf=document.getElementById("killFeed")
+  let div=document.createElement("div");div.className="kill-msg";div.textContent="⚔ "+msg
+  kf.appendChild(div);setTimeout(()=>div.remove(),3000)
+  // Broadcast
+  rtdb.ref('lobbies/'+currentLobbyId+'/killfeed').push({msg,t:Date.now()})
+}
+
+function drawOnline(){
+  oCtx.fillStyle="#0a0f0a";oCtx.fillRect(0,0,oCanvas.width,oCanvas.height)
+
+  // Camera centrée sur notre tête
+  let camX=oSnake.length>0?oSnake[0].x:ONLINE_MAP/2
+  let camY=oSnake.length>0?oSnake[0].y:ONLINE_MAP/2
+  let vw=oCanvas.width, vh=oCanvas.height
+  let offX=vw/2-camX-ONLINE_GRID/2, offY=vh/2-camY-ONLINE_GRID/2
+
+  oCtx.save();oCtx.translate(offX,offY)
+
+  // Fond de la map
+  oCtx.fillStyle="#0d1117"
+  oCtx.fillRect(0,0,ONLINE_MAP,ONLINE_MAP)
+
+  // Grille
+  oCtx.strokeStyle="rgba(0,255,136,0.03)";oCtx.lineWidth=1
+  for(let x=0;x<=ONLINE_MAP;x+=ONLINE_GRID){oCtx.beginPath();oCtx.moveTo(x,0);oCtx.lineTo(x,ONLINE_MAP);oCtx.stroke()}
+  for(let y=0;y<=ONLINE_MAP;y+=ONLINE_GRID){oCtx.beginPath();oCtx.moveTo(0,y);oCtx.lineTo(ONLINE_MAP,y);oCtx.stroke()}
+
+  // MURS visibles
+  oCtx.strokeStyle="rgba(255,0,128,0.8)"
+  oCtx.lineWidth=4
+  oCtx.shadowColor="rgba(255,0,128,0.6)"
+  oCtx.shadowBlur=12
+  oCtx.strokeRect(2,2,ONLINE_MAP-4,ONLINE_MAP-4)
+  // Deuxième bordure pour effet néon
+  oCtx.strokeStyle="rgba(255,0,128,0.3)"
+  oCtx.lineWidth=8
+  oCtx.strokeRect(0,0,ONLINE_MAP,ONLINE_MAP)
+  oCtx.shadowBlur=0
+
+  // Food
+  oFood.forEach(f=>drawOnlineFood(f))
+
+  // Autres joueurs (semi-transparent)
+  Object.entries(oPlayers).forEach(([name,p])=>{
+    if(name===currentUser)return
+    if(!p.alive)return
+    let seg=p.snake||[]
+    seg.forEach((s,i)=>{
+      if(!s)return
+      oCtx.globalAlpha=i===0?0.6:0.3
+      oCtx.fillStyle=p.color||'cyan'
+      oCtx.fillRect(s.x+1,s.y+1,ONLINE_GRID-2,ONLINE_GRID-2)
+    })
+    oCtx.globalAlpha=1
+    if(seg[0]){
+      oCtx.save();oCtx.font="bold 11px 'Orbitron',monospace";oCtx.textAlign="center"
+      oCtx.fillStyle=p.color||'cyan';oCtx.shadowColor=p.color||'cyan';oCtx.shadowBlur=6
+      oCtx.fillText(name,seg[0].x+ONLINE_GRID/2,seg[0].y-4);oCtx.restore()
+    }
+  })
+
+  // Mon serpent
+  oSnake.forEach((s,i)=>{
+    if(!s)return
+    let col=oInvincible?`hsl(${(Date.now()/5)%360},100%,60%)`:oMyColor
+    if(i===0){
+      oCtx.globalAlpha=oInvincible?0.7:1
+      oCtx.fillStyle=col;oCtx.fillRect(s.x,s.y,ONLINE_GRID,ONLINE_GRID)
+      try{oCtx.drawImage(snakeHeadImg,s.x,s.y,ONLINE_GRID,ONLINE_GRID)}catch{}
+    } else {
+      let a=Math.max(0.4,1-i/oSnake.length*0.6)
+      oCtx.globalAlpha=oInvincible?0.5:a
+      oCtx.fillStyle=col;oCtx.fillRect(s.x+1,s.y+1,ONLINE_GRID-2,ONLINE_GRID-2)
+    }
+  })
+  oCtx.globalAlpha=1
+  oCtx.restore()
+}
+
+function drawOnlineFood(f){
+  if(!f)return
+  if(f.type==='rainbow'){
+    let t=Date.now()/300,g=oCtx.createLinearGradient(f.x,f.y,f.x+ONLINE_GRID,f.y+ONLINE_GRID)
+    g.addColorStop(0,`hsl(${(t*60)%360},100%,60%)`);g.addColorStop(0.5,`hsl(${(t*60+180)%360},100%,60%)`);g.addColorStop(1,`hsl(${(t*60+360)%360},100%,60%)`)
+    oCtx.fillStyle=g;oCtx.fillRect(f.x+1,f.y+1,ONLINE_GRID-2,ONLINE_GRID-2)
+  } else if(f.type==='diamond'){
+    try{oCtx.drawImage(diamondImg,f.x,f.y,ONLINE_GRID,ONLINE_GRID)}catch{oCtx.fillStyle='#00eeff';oCtx.fillRect(f.x+2,f.y+2,ONLINE_GRID-4,ONLINE_GRID-4)}
+  } else if(f.type==='salad'){
+    try{oCtx.drawImage(saladImg,f.x,f.y,ONLINE_GRID,ONLINE_GRID)}catch{oCtx.fillStyle='#7ec850';oCtx.fillRect(f.x+1,f.y+1,ONLINE_GRID-2,ONLINE_GRID-2)}
+  } else if(f.type==='gold'){
+    try{oCtx.drawImage(goldenAppleImg,f.x,f.y,ONLINE_GRID,ONLINE_GRID)}catch{oCtx.fillStyle='gold';oCtx.fillRect(f.x,f.y,ONLINE_GRID,ONLINE_GRID)}
+  } else {
+    try{oCtx.drawImage(appleImg,f.x,f.y,ONLINE_GRID,ONLINE_GRID)}catch{oCtx.fillStyle='#ff4444';oCtx.fillRect(f.x,f.y,ONLINE_GRID,ONLINE_GRID)}
+  }
+}
+
+function updateOnlineHUD(){
+  document.getElementById("onlineScore").innerText=oScore
+  document.getElementById("onlineTail").innerText=oTail
+  let m=Math.floor(oTimeLeft/60),s=oTimeLeft%60
+  document.getElementById("onlineTimer").innerText=m+":"+(s<10?"0":"")+s
+}
+
+/* ONLINE CONTROLS */
+function onlineKeydown(e){
+  if(e.key==="ArrowUp"&&oDy===0&&oNextDy===0){oNextDx=0;oNextDy=-ONLINE_GRID}
+  if(e.key==="ArrowDown"&&oDy===0&&oNextDy===0){oNextDx=0;oNextDy=ONLINE_GRID}
+  if(e.key==="ArrowLeft"&&oDx===0&&oNextDx===0){oNextDx=-ONLINE_GRID;oNextDy=0}
+  if(e.key==="ArrowRight"&&oDx===0&&oNextDx===0){oNextDx=ONLINE_GRID;oNextDy=0}
+  if(e.key==="w"&&oDy===0&&oNextDy===0){oNextDx=0;oNextDy=-ONLINE_GRID}
+  if(e.key==="s"&&oDy===0&&oNextDy===0){oNextDx=0;oNextDy=ONLINE_GRID}
+  if(e.key==="a"&&oDx===0&&oNextDx===0){oNextDx=-ONLINE_GRID;oNextDy=0}
+  if(e.key==="d"&&oDx===0&&oNextDx===0){oNextDx=ONLINE_GRID;oNextDy=0}
+}
+
+/* END ONLINE */
+function endOnlineGame(){
+  clearInterval(oInterval);clearInterval(oTimerInterval)
+  oInterval=null;oTimerInterval=null
+  document.removeEventListener("keydown",onlineKeydown)
+  rtdb.ref('lobbies/'+currentLobbyId+'/presence/'+currentUser).remove()
+  rtdb.ref('lobbies/'+currentLobbyId+'/presence').off()
+  rtdb.ref('lobbies/'+currentLobbyId+'/disconnected').off()
+  rtdb.ref('lobbies/'+currentLobbyId+'/sharedFood').off()
+  rtdb.ref('lobbies/'+currentLobbyId+'/game/'+currentUser+'/finalScore').set(oScore)
+  setTimeout(()=>showOnlineResults(),1500)
+}
+
+async function showOnlineResults(){
+  let snap=await rtdb.ref('lobbies/'+currentLobbyId+'/game').once('value')
+  let gdata=snap.val()||{}
+  let results=[]
+  Object.entries(gdata).forEach(([name,pd])=>{
+    results.push({name,score:pd.finalScore||pd.score||0,color:oPlayers[name]?.color||'white'})
+  })
+  results.sort((a,b)=>b.score-a.score)
+  document.getElementById("onlineGame").classList.add("hidden")
+  document.getElementById("deathScreen").classList.add("hidden")
+  document.getElementById("onlineResultScreen").classList.remove("hidden")
+  let list=document.getElementById("onlineResultList");list.innerHTML=""
+  let medals=["🥇","🥈","🥉"]
+  results.forEach((r,i)=>{
+    let row=document.createElement("div")
+    row.className="result-row "+(i===0?"rank-1":i===1?"rank-2":i===2?"rank-3":"other")
+    row.innerHTML=`<span style="font-size:18px">${medals[i]||"#"+(i+1)}</span><span style="color:${r.color};font-weight:700;flex:1;text-align:left">${r.name}</span><span style="color:var(--neon-green);font-weight:700">${r.score} pts</span>`
+    list.appendChild(row)
+  })
+  let t=10
+  let ri=setInterval(()=>{
+    t--;document.getElementById("returnMsg").innerText="Retour au lobby dans "+t+"s..."
+    if(t<=0){
+      clearInterval(ri)
+      document.getElementById("onlineResultScreen").classList.add("hidden")
+      document.getElementById("invincibleBar").classList.add("hidden")
+      document.getElementById("killFeed").innerHTML=""
+      // Remettre le lobby en waiting
+      if(isLobbyChef){
+        rtdb.ref('lobbies/'+currentLobbyId).update({status:'waiting'})
+        rtdb.ref('lobbies/'+currentLobbyId+'/game').remove()
+        rtdb.ref('lobbies/'+currentLobbyId+'/sharedFood').remove()
+        rtdb.ref('lobbies/'+currentLobbyId+'/killfeed').remove()
+        rtdb.ref('lobbies/'+currentLobbyId+'/playersInit').remove()
+        rtdb.ref('lobbies/'+currentLobbyId+'/foods').remove()
+      }
+      enterLobbyRoom(currentLobbyId)
+    }
+  },1000)
+}
+
 /* ===== INIT ===== */
-window.addEventListener("load", ()=>{
+window.addEventListener("load",()=>{
   setTimeout(()=>{
     document.getElementById("loading").classList.add("hidden")
     showScreen("screenAuth")
-  }, 1000)
+  },1000)
 })
-
 </script>
 </body>
 </html>
