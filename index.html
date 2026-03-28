@@ -98,7 +98,9 @@ canvas.reset-flash{animation:resetFlash 0.4s ease 3;}
 @keyframes spin{to{transform:rotate(360deg)}}
 .hidden{display:none!important;}
 
-/* ===== ONLINE MODE STYLES ===== */
+#onlineMobileControls{display:none;margin-top:8px;text-align:center;}
+#onlineMobileControls button{font-size:22px;padding:10px 16px;margin:3px;background:rgba(0,0,0,0.5);border:1px solid rgba(0,195,255,0.3);border-radius:8px;color:white;cursor:pointer;}
+@media(max-width:768px){#onlineMobileControls{display:block;}}
 .lobby-list{width:100%;max-width:480px;max-height:50vh;overflow-y:auto;display:flex;flex-direction:column;gap:8px;}
 .lobby-card{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:rgba(0,0,0,0.4);border:1px solid rgba(0,195,255,0.2);border-radius:10px;cursor:pointer;transition:all 0.2s;font-size:11px;}
 .lobby-card:hover{border-color:var(--neon-blue);background:rgba(0,195,255,0.06);transform:translateX(4px);}
@@ -354,6 +356,14 @@ canvas.reset-flash{animation:resetFlash 0.4s ease 3;}
     <div><span style="color:rgba(255,255,255,0.4);font-size:9px">QUEUE </span><span id="onlineTail">1</span></div>
   </div>
   <canvas id="onlineCanvas" width="800" height="800"></canvas>
+  <div id="onlineMobileControls">
+    <div><button onclick="onlineMobileDir('up')">⬆️</button></div>
+    <div>
+      <button onclick="onlineMobileDir('left')">⬅️</button>
+      <button onclick="onlineMobileDir('down')">⬇️</button>
+      <button onclick="onlineMobileDir('right')">➡️</button>
+    </div>
+  </div>
 </div>
 
 <!-- KILL FEED -->
@@ -1507,7 +1517,25 @@ function updateOnlineHUD(){
 }
 
 /* ONLINE CONTROLS */
-function onlineKeydown(e){
+function onlineMobileDir(dir){
+  if(dir==="up"&&oDy===0&&oNextDy===0){oNextDx=0;oNextDy=-ONLINE_GRID}
+  if(dir==="down"&&oDy===0&&oNextDy===0){oNextDx=0;oNextDy=ONLINE_GRID}
+  if(dir==="left"&&oDx===0&&oNextDx===0){oNextDx=-ONLINE_GRID;oNextDy=0}
+  if(dir==="right"&&oDx===0&&oNextDx===0){oNextDx=ONLINE_GRID;oNextDy=0}
+}
+
+let oStartX=0,oStartY=0
+oCanvas.addEventListener("touchstart",e=>{oStartX=e.touches[0].clientX;oStartY=e.touches[0].clientY},{passive:true})
+oCanvas.addEventListener("touchend",e=>{
+  let dX=e.changedTouches[0].clientX-oStartX,dY=e.changedTouches[0].clientY-oStartY
+  if(Math.abs(dX)>Math.abs(dY)){
+    if(dX>0&&oDx===0&&oNextDx===0){oNextDx=ONLINE_GRID;oNextDy=0}
+    else if(dX<0&&oDx===0&&oNextDx===0){oNextDx=-ONLINE_GRID;oNextDy=0}
+  }else{
+    if(dY>0&&oDy===0&&oNextDy===0){oNextDx=0;oNextDy=ONLINE_GRID}
+    else if(dY<0&&oDy===0&&oNextDy===0){oNextDx=0;oNextDy=-ONLINE_GRID}
+  }
+},{passive:true})
   if(e.key==="ArrowUp"&&oDy===0&&oNextDy===0){oNextDx=0;oNextDy=-ONLINE_GRID}
   if(e.key==="ArrowDown"&&oDy===0&&oNextDy===0){oNextDx=0;oNextDy=ONLINE_GRID}
   if(e.key==="ArrowLeft"&&oDx===0&&oNextDx===0){oNextDx=-ONLINE_GRID;oNextDy=0}
