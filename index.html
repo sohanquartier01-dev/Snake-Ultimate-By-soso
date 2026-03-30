@@ -4,9 +4,12 @@
 <title>Snake Ultimate</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
 <style>
 :root{--neon-green:#00ff88;--neon-blue:#00c3ff;--neon-pink:#ff0080;--neon-gold:#ffd700;--bg-dark:#060a0f;--bg-card:rgba(0,255,136,0.04);--border-neon:rgba(0,255,136,0.25);}
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -58,6 +61,7 @@ canvas.reset-flash{animation:resetFlash 0.4s ease 3;}
 @media(max-width:768px){#mobileControls{display:block;}}
 .levels-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;max-width:380px;max-height:55vh;overflow-y:auto;padding-right:4px;}
 .levels-grid::-webkit-scrollbar{width:4px;}
+.levels-grid::-webkit-scrollbar-track{background:transparent;}
 .levels-grid::-webkit-scrollbar-thumb{background:var(--neon-green);border-radius:4px;}
 .level-card{padding:12px;background:rgba(0,0,0,0.3);border:1px solid rgba(0,255,136,0.15);border-radius:8px;cursor:pointer;transition:all 0.2s;font-size:10px;}
 .level-card:hover{border-color:var(--neon-green);background:rgba(0,255,136,0.08);transform:translateY(-2px);}
@@ -98,7 +102,7 @@ canvas.reset-flash{animation:resetFlash 0.4s ease 3;}
 @keyframes spin{to{transform:rotate(360deg)}}
 .hidden{display:none!important;}
 
-/* ===== ONLINE MODE STYLES ===== */
+/* ONLINE MODE STYLES */
 .lobby-list{width:100%;max-width:480px;max-height:50vh;overflow-y:auto;display:flex;flex-direction:column;gap:8px;}
 .lobby-card{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:rgba(0,0,0,0.4);border:1px solid rgba(0,195,255,0.2);border-radius:10px;cursor:pointer;transition:all 0.2s;font-size:11px;}
 .lobby-card:hover{border-color:var(--neon-blue);background:rgba(0,195,255,0.06);transform:translateX(4px);}
@@ -113,15 +117,18 @@ canvas.reset-flash{animation:resetFlash 0.4s ease 3;}
 .player-name{display:flex;align-items:center;gap:8px;}
 .chef-badge{font-size:9px;padding:2px 7px;background:rgba(255,215,0,0.15);border:1px solid rgba(255,215,0,0.4);border-radius:10px;color:var(--neon-gold);}
 .form-label{font-size:10px;color:rgba(255,255,255,0.5);text-align:left;margin-top:8px;margin-bottom:2px;letter-spacing:1px;}
-
-/* ONLINE GAME */
 #onlineGame{position:fixed;inset:0;z-index:100;background:#060a0f;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:8px;}
 #onlineGame.hidden{display:none!important;}
 #onlineHUD{display:flex;justify-content:space-between;align-items:center;width:100%;max-width:900px;padding:6px 12px;background:rgba(0,0,0,0.6);border:1px solid rgba(0,195,255,0.2);border-radius:8px;margin-bottom:6px;font-size:11px;flex-wrap:wrap;gap:6px;}
 #onlineTimer{font-family:'Press Start 2P',monospace;font-size:16px;color:var(--neon-pink);}
 #onlineScore{color:var(--neon-green);font-weight:700;font-size:15px;}
 #onlineTail{color:var(--neon-blue);font-weight:700;}
-#onlineCanvas{background:#0a0f0a;border:2px solid rgba(0,195,255,0.3);border-radius:8px;display:block;max-width:98vw;max-height:75vh;}
+#onlineCanvas{background:#0a0f0a;border:2px solid rgba(0,195,255,0.3);border-radius:8px;display:block;max-width:98vw;max-height:60vh;}
+/* MOBILE CONTROLS ONLINE */
+#onlineMobileControls{display:none;margin-top:10px;text-align:center;}
+#onlineMobileControls button{font-size:22px;padding:12px 18px;margin:3px;background:rgba(0,0,0,0.5);border:1px solid rgba(0,195,255,0.3);border-radius:8px;color:white;cursor:pointer;transition:all 0.2s;}
+#onlineMobileControls button:active{background:rgba(0,195,255,0.15);}
+@media(max-width:768px){#onlineMobileControls{display:block;}}
 #killFeed{position:fixed;top:60px;left:12px;z-index:200;display:flex;flex-direction:column;gap:4px;pointer-events:none;}
 .kill-msg{font-size:10px;padding:4px 10px;background:rgba(255,0,128,0.15);border:1px solid rgba(255,0,128,0.3);border-radius:6px;color:white;animation:fadeKill 3s ease forwards;}
 @keyframes fadeKill{0%{opacity:1;transform:translateX(0)}80%{opacity:1}100%{opacity:0;transform:translateX(-20px)}}
@@ -136,8 +143,23 @@ canvas.reset-flash{animation:resetFlash 0.4s ease 3;}
 .result-row.rank-2{background:rgba(192,192,192,0.08);border:1px solid rgba(192,192,192,0.3);}
 .result-row.rank-3{background:rgba(205,127,50,0.08);border:1px solid rgba(205,127,50,0.3);}
 .result-row.other{background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);}
+
+/* PARAMÈTRES */
+#settingsBtn{position:absolute;top:20px;right:20px;z-index:10;background:rgba(0,0,0,0.4);border:1px solid rgba(0,255,136,0.2);border-radius:8px;padding:8px 10px;cursor:pointer;font-size:16px;color:rgba(255,255,255,0.6);transition:all 0.2s;}
+#settingsBtn:hover{border-color:var(--neon-green);color:var(--neon-green);background:rgba(0,255,136,0.08);}
+#settingsOverlay{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(6,10,15,0.92);backdrop-filter:blur(8px);}
+#settingsOverlay.hidden{display:none!important;}
+.settings-card{background:var(--bg-card);border:1px solid var(--border-neon);border-radius:12px;padding:28px;width:100%;max-width:380px;}
+.settings-title{font-family:'Press Start 2P',monospace;font-size:14px;color:var(--neon-green);margin-bottom:20px;}
+.key-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.06);}
+.key-label{font-size:11px;color:rgba(255,255,255,0.7);}
+.key-btn{padding:8px 16px;font-family:'Orbitron',monospace;font-size:11px;font-weight:700;background:rgba(0,0,0,0.5);border:1px solid rgba(0,255,136,0.3);border-radius:6px;color:var(--neon-green);cursor:pointer;min-width:80px;transition:all 0.2s;}
+.key-btn:hover{border-color:var(--neon-green);background:rgba(0,255,136,0.08);}
+.key-btn.listening{border-color:var(--neon-gold);color:var(--neon-gold);animation:pulse 0.6s ease infinite alternate;}
+@keyframes pulse{from{box-shadow:0 0 4px rgba(255,215,0,0.3)}to{box-shadow:0 0 12px rgba(255,215,0,0.8)}}
 </style>
 </head>
+
 <body>
 
 <!-- LOADING -->
@@ -179,7 +201,9 @@ canvas.reset-flash{animation:resetFlash 0.4s ease 3;}
 </div>
 
 <!-- MENU -->
-<div id="screenMenu" class="screen hidden">
+<div id="screenMenu" class="screen hidden" style="position:relative">
+  <!-- BOUTON PARAMÈTRES -->
+  <button id="settingsBtn" onclick="openSettings()">⚙️</button>
   <div class="main-title">🐍 SNAKE</div>
   <div class="subtitle">U L T I M A T E</div>
   <h3 id="bestScore" style="font-size:12px;color:var(--neon-gold);margin-bottom:24px;"></h3>
@@ -280,7 +304,7 @@ canvas.reset-flash{animation:resetFlash 0.4s ease 3;}
   <button class="btn btn-secondary" style="margin-top:16px" onclick="showScreen('screenMenu')">← Retour</button>
 </div>
 
-<!-- ===== ONLINE HUB ===== -->
+<!-- ONLINE HUB -->
 <div id="screenOnlineHub" class="screen hidden">
   <div class="main-title" style="font-size:clamp(14px,3vw,28px);margin-bottom:6px">🌐 MODE ONLINE</div>
   <div class="subtitle" style="margin-bottom:20px">LOBBIES EN DIRECT</div>
@@ -303,23 +327,15 @@ canvas.reset-flash{animation:resetFlash 0.4s ease 3;}
     <input id="lobbyNameInput" placeholder="Mon lobby..." maxlength="15" autocomplete="off">
     <div class="form-label">NOMBRE DE JOUEURS MAX (2-8)</div>
     <select id="lobbyMaxPlayers">
-      <option value="2">2 joueurs</option>
-      <option value="3">3 joueurs</option>
-      <option value="4" selected>4 joueurs</option>
-      <option value="5">5 joueurs</option>
-      <option value="6">6 joueurs</option>
-      <option value="7">7 joueurs</option>
-      <option value="8">8 joueurs</option>
+      <option value="2">2 joueurs</option><option value="3">3 joueurs</option>
+      <option value="4" selected>4 joueurs</option><option value="5">5 joueurs</option>
+      <option value="6">6 joueurs</option><option value="7">7 joueurs</option><option value="8">8 joueurs</option>
     </select>
     <div class="form-label">DURÉE DE LA PARTIE</div>
     <select id="lobbyDuration">
-      <option value="120">2 minutes</option>
-      <option value="150">2 min 30</option>
-      <option value="180" selected>3 minutes</option>
-      <option value="210">3 min 30</option>
-      <option value="240">4 minutes</option>
-      <option value="270">4 min 30</option>
-      <option value="300">5 minutes</option>
+      <option value="120">2 minutes</option><option value="150">2 min 30</option>
+      <option value="180" selected>3 minutes</option><option value="210">3 min 30</option>
+      <option value="240">4 minutes</option><option value="270">4 min 30</option><option value="300">5 minutes</option>
     </select>
     <button class="btn btn-primary" style="width:100%;margin-top:16px" onclick="createLobby()">Créer le lobby</button>
     <button class="btn btn-secondary" style="width:100%;margin-top:4px" onclick="showScreen('screenOnlineHub')">← Retour</button>
@@ -354,6 +370,15 @@ canvas.reset-flash{animation:resetFlash 0.4s ease 3;}
     <div><span style="color:rgba(255,255,255,0.4);font-size:9px">QUEUE </span><span id="onlineTail">1</span></div>
   </div>
   <canvas id="onlineCanvas" width="800" height="800"></canvas>
+  <!-- MOBILE CONTROLS ONLINE -->
+  <div id="onlineMobileControls">
+    <div><button onclick="onlineMobileDir('up')">⬆️</button></div>
+    <div>
+      <button onclick="onlineMobileDir('left')">⬅️</button>
+      <button onclick="onlineMobileDir('down')">⬇️</button>
+      <button onclick="onlineMobileDir('right')">➡️</button>
+    </div>
+  </div>
 </div>
 
 <!-- KILL FEED -->
@@ -377,6 +402,34 @@ canvas.reset-flash{animation:resetFlash 0.4s ease 3;}
   <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:16px" id="returnMsg">Retour au lobby dans 10s...</div>
 </div>
 
+<!-- PARAMÈTRES OVERLAY -->
+<div id="settingsOverlay" class="hidden">
+  <div class="settings-card">
+    <div class="settings-title">⚙️ PARAMÈTRES</div>
+    <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:16px">Clique sur une touche puis appuie sur la nouvelle</div>
+    <div class="key-row">
+      <span class="key-label">⬆️ Haut</span>
+      <button class="key-btn" id="keyBtn_up" onclick="startListening('up')"></button>
+    </div>
+    <div class="key-row">
+      <span class="key-label">⬇️ Bas</span>
+      <button class="key-btn" id="keyBtn_down" onclick="startListening('down')"></button>
+    </div>
+    <div class="key-row">
+      <span class="key-label">⬅️ Gauche</span>
+      <button class="key-btn" id="keyBtn_left" onclick="startListening('left')"></button>
+    </div>
+    <div class="key-row">
+      <span class="key-label">➡️ Droite</span>
+      <button class="key-btn" id="keyBtn_right" onclick="startListening('right')"></button>
+    </div>
+    <div style="margin-top:16px;display:flex;gap:8px;justify-content:center">
+      <button class="btn btn-secondary" onclick="resetKeys()" style="font-size:10px;padding:8px 16px">↺ Réinitialiser</button>
+      <button class="btn btn-primary" onclick="closeSettings()" style="font-size:10px;padding:8px 16px">✓ Fermer</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ===== FIREBASE ===== */
 const firebaseConfig = {
@@ -391,6 +444,66 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig)
 const db = firebase.firestore()
 const rtdb = firebase.database()
+
+/* ===== PARAMÈTRES TOUCHES ===== */
+const DEFAULT_KEYS = { up:'ArrowUp', down:'ArrowDown', left:'ArrowLeft', right:'ArrowRight' }
+let customKeys = JSON.parse(localStorage.getItem('snakeKeys') || 'null') || {...DEFAULT_KEYS}
+let listeningFor = null
+
+function saveKeys(){ localStorage.setItem('snakeKeys', JSON.stringify(customKeys)) }
+function updateKeyDisplay(){
+  ['up','down','left','right'].forEach(dir=>{
+    let btn = document.getElementById('keyBtn_'+dir)
+    if(btn) btn.textContent = formatKey(customKeys[dir])
+  })
+}
+function formatKey(k){
+  if(k==='ArrowUp')return '↑'
+  if(k==='ArrowDown')return '↓'
+  if(k==='ArrowLeft')return '←'
+  if(k==='ArrowRight')return '→'
+  if(k===' ')return 'Espace'
+  return k.length===1 ? k.toUpperCase() : k
+}
+function openSettings(){
+  updateKeyDisplay()
+  document.getElementById('settingsOverlay').classList.remove('hidden')
+}
+function closeSettings(){
+  if(listeningFor) cancelListening()
+  document.getElementById('settingsOverlay').classList.add('hidden')
+}
+function startListening(dir){
+  if(listeningFor) cancelListening()
+  listeningFor = dir
+  let btn = document.getElementById('keyBtn_'+dir)
+  btn.textContent = '...'
+  btn.classList.add('listening')
+}
+function cancelListening(){
+  if(!listeningFor) return
+  let btn = document.getElementById('keyBtn_'+listeningFor)
+  if(btn){ btn.classList.remove('listening'); btn.textContent = formatKey(customKeys[listeningFor]) }
+  listeningFor = null
+}
+function resetKeys(){
+  customKeys = {...DEFAULT_KEYS}
+  saveKeys(); updateKeyDisplay()
+}
+// Écoute globale pour la capture de touche
+document.addEventListener('keydown', e=>{
+  if(listeningFor){
+    e.preventDefault()
+    // Interdire Escape
+    if(e.key === 'Escape'){ cancelListening(); return }
+    customKeys[listeningFor] = e.key
+    saveKeys()
+    let btn = document.getElementById('keyBtn_'+listeningFor)
+    if(btn){ btn.classList.remove('listening'); btn.textContent = formatKey(e.key) }
+    listeningFor = null
+    return
+  }
+})
 
 /* ===== STATE SOLO ===== */
 let currentUser=null, userData=null, sessionFruits=0
@@ -422,34 +535,26 @@ const BONUS_LABELS={phantom:'👻 PHANTOM',clockFast:'⚡ RAPIDE',clockSlow:'�
 const BONUS_CLASS={phantom:'b-phantom',clockFast:'b-clockFast',clockSlow:'b-clockSlow',rain:'b-rain',star:'b-star'}
 const BONUS_COLORS={phantom:'#a78bfa',clock:'#f97316',rain:'#34d399',star:'#ffd700'}
 
-let sessionId = Math.random().toString(36).slice(2)
-let sessionRef = null
-
+let sessionId=Math.random().toString(36).slice(2), sessionRef=null
 function startSessionWatch(username){
-  if(sessionRef) sessionRef.off()
-  sessionRef = rtdb.ref('sessions/'+username)
-  // Écrire notre session
+  if(sessionRef)sessionRef.off()
+  sessionRef=rtdb.ref('sessions/'+username)
   sessionRef.set(sessionId)
-  // Surveiller si une autre session prend la main
-  sessionRef.on('value', snap=>{
-    if(snap.val() && snap.val() !== sessionId){
-      // Une autre session a pris la place
-      sessionRef.off()
-      currentUser = null; userData = null
+  sessionRef.on('value',snap=>{
+    if(snap.val()&&snap.val()!==sessionId){
+      sessionRef.off(); currentUser=null; userData=null
       alert("⚠️ Tu as été déconnecté car ton compte a été ouvert ailleurs.")
       showScreen('screenAuth')
     }
   })
 }
+function stopSessionWatch(){if(sessionRef){sessionRef.off();sessionRef.remove();sessionRef=null}}
 
-function stopSessionWatch(){
-  if(sessionRef){
-    sessionRef.off()
-    sessionRef.remove()
-    sessionRef = null
-  }
+/* ===== NAV ===== */
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'))
+  document.getElementById(id).classList.remove('hidden')
 }
-function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));document.getElementById(id).classList.remove('hidden')}
 
 /* ===== AUTH ===== */
 async function register(){
@@ -529,8 +634,6 @@ function startGame(){
   if(mode==="classic")scheduleBonusSpawn()
   startCountdown(()=>{interval=setInterval(loop,getSpeed())})
 }
-
-/* BONUS SPAWN */
 function scheduleBonusSpawn(){
   clearTimeout(bonusSpawnTimer)
   bonusSpawnTimer=setTimeout(()=>{if(!isPaused)spawnBonus();else scheduleBonusSpawn()},30000)
@@ -558,8 +661,6 @@ function randomFreeCell(){
   while(attempts<200&&occ.some(p=>p.x===pos.x&&p.y===pos.y))
   return pos
 }
-
-/* FOOD */
 function randomFood(){
   let cols=400/gridSize,rows=400/gridSize,occ=[...snake,...extraFoods]
   if(bonusOnMap)occ.push(bonusOnMap)
@@ -574,7 +675,6 @@ function randomFood(){
   return{x:pos.x,y:pos.y,type:'normal'}
 }
 function randomExtraFood(){
-  // BUG FIX : pluie de pommes inclut tous les types
   let cols=400/gridSize,rows=400/gridSize,occ=[...snake,...extraFoods]
   if(food)occ.push(food); if(bonusOnMap)occ.push(bonusOnMap)
   let pos,attempts=0
@@ -593,24 +693,17 @@ function getFoodPts(f){
   if(f.type==='rainbow')return 10
   return 1
 }
-
-/* EFFETS */
 function activateBonus(type){
   bonusOnMap=null;clearTimeout(bonusDespawnTimer);scheduleBonusSpawn()
   if(type==='clock'){applyEffect(Math.random()<0.25?'clockFast':'clockSlow',10);return}
-  // FIXED : étoile dure 15s et donne boost x1.5
-  applyEffect(type, type==='star'?15:10)
+  applyEffect(type,type==='star'?15:10)
 }
 function applyEffect(name,sec){
   if(effectTimers[name])clearTimeout(effectTimers[name])
   if(effectCDIntervals[name])clearInterval(effectCDIntervals[name])
   if(name==='clockFast'){activeEffects.clockSlow=false;activeEffects.clockFast=true;restartLoop()}
   else if(name==='clockSlow'){activeEffects.clockFast=false;activeEffects.clockSlow=true;restartLoop()}
-  else if(name==='star'){
-    activeEffects.star=true;canvas.classList.add('star-active')
-    // boost vitesse x1.5 pendant l'étoile
-    speedMultiplier*=1.5; restartLoop()
-  }
+  else if(name==='star'){activeEffects.star=true;canvas.classList.add('star-active');speedMultiplier*=1.5;restartLoop()}
   else activeEffects[name]=true
   effectCountdowns[name]=sec; updateBonusBar()
   effectCDIntervals[name]=setInterval(()=>{effectCountdowns[name]--;updateBonusBar();if(effectCountdowns[name]<=0)clearInterval(effectCDIntervals[name])},1000)
@@ -621,11 +714,7 @@ function applyEffect(name,sec){
     if(name==='rain'){clearInterval(rainInterval);rainInterval=null}
     delete effectCountdowns[name]; updateBonusBar()
   },sec*1000)
-  if(name==='rain'){
-    rainInterval=setInterval(()=>{
-      if(extraFoods.length<10)extraFoods.push(randomExtraFood())
-    },1000)
-  }
+  if(name==='rain'){rainInterval=setInterval(()=>{if(extraFoods.length<10)extraFoods.push(randomExtraFood())},1000)}
 }
 function getSpeed(){
   let s=BASE_INTERVAL
@@ -643,8 +732,6 @@ function updateBonusBar(){
     bar.appendChild(d)
   })
 }
-
-/* COUNTDOWN */
 function startCountdown(cb){
   let ov=document.getElementById("countdownOverlay"),ne=document.getElementById("countdownNumber")
   ov.classList.remove("hidden");isCountingDown=true;let c=3;ne.textContent=c
@@ -655,14 +742,11 @@ function startCountdown(cb){
     else{ne.style.animation="none";ne.offsetHeight;ne.style.animation="cdPop 0.4s ease";ne.textContent=c}
   },900)
 }
-
-/* PAUSE */
 function togglePause(){if(isPaused)resumeGame();else pauseGame()}
 function pauseGame(){
   if(isPaused||isCountingDown)return
   isPaused=true;clearInterval(interval)
-  clearInterval(rainInterval)
-  clearTimeout(bonusDespawnTimer)
+  clearInterval(rainInterval);clearTimeout(bonusDespawnTimer)
   Object.keys(effectCDIntervals).forEach(k=>clearInterval(effectCDIntervals[k]))
   document.getElementById("pauseOverlay").classList.remove("hidden")
 }
@@ -684,8 +768,11 @@ function quitToMenu(){
   showScreen('screenMenu');loadUserData().then(updateBestScoreDisplay)
 }
 
-/* CONTROLS */
+/* ===== CONTROLS SOLO avec touches personnalisées ===== */
 document.addEventListener("keydown",e=>{
+  // Capture paramètres (géré plus haut dans le listener dédié)
+  if(listeningFor) return
+
   if(e.key==="Escape"){
     if(isCountingDown)return
     if(!document.getElementById("screenGame").classList.contains("hidden"))togglePause()
@@ -700,10 +787,10 @@ document.addEventListener("visibilitychange",()=>{
 })
 function handleDirection(key){
   if(isPaused)return
-  if((key==="ArrowUp"||key==="w")&&dy===0&&nextDy===0){nextDx=0;nextDy=-gridSize}
-  if((key==="ArrowDown"||key==="s")&&dy===0&&nextDy===0){nextDx=0;nextDy=gridSize}
-  if((key==="ArrowLeft"||key==="a")&&dx===0&&nextDx===0){nextDx=-gridSize;nextDy=0}
-  if((key==="ArrowRight"||key==="d")&&dx===0&&nextDx===0){nextDx=gridSize;nextDy=0}
+  if(key===customKeys.up&&dy===0&&nextDy===0){nextDx=0;nextDy=-gridSize}
+  if(key===customKeys.down&&dy===0&&nextDy===0){nextDx=0;nextDy=gridSize}
+  if(key===customKeys.left&&dx===0&&nextDx===0){nextDx=-gridSize;nextDy=0}
+  if(key===customKeys.right&&dx===0&&nextDx===0){nextDx=gridSize;nextDy=0}
 }
 function mobileDir(dir){
   if(isPaused)return
@@ -721,7 +808,7 @@ canvas.addEventListener("touchend",e=>{
   else{if(dY>0&&dy===0&&nextDy===0){nextDx=0;nextDy=gridSize}else if(dY<0&&dy===0&&nextDy===0){nextDx=0;nextDy=-gridSize}}
 },{passive:true})
 
-/* LOOP SOLO */
+/* ===== LOOP SOLO ===== */
 function loop(){
   dx=nextDx;dy=nextDy;directionChanged=false
   let head={x:snake[0].x+dx,y:snake[0].y+dy}
@@ -758,12 +845,10 @@ function loop(){
   draw()
 }
 function resetSnake(){
-  let hx=snake[0].x,hy=snake[0].y;snake=[{x:hx,y:hy}];speedMultiplier*=1.1
+  let hx=snake[0].x,hy=snake[0].y;snake=[{x:hx,y:hy}];speedMultiplier*=1.5
   canvas.classList.remove('reset-flash');void canvas.offsetWidth;canvas.classList.add('reset-flash')
   setTimeout(()=>canvas.classList.remove('reset-flash'),1200);restartLoop()
 }
-
-/* DRAW SOLO */
 function draw(){
   ctx.fillStyle="#0a0f0a";ctx.fillRect(0,0,400,400)
   ctx.strokeStyle="rgba(0,255,136,0.03)";ctx.lineWidth=1
@@ -792,16 +877,13 @@ function drawFood(f){
     else ctx.fillRect(f.x+1,f.y+1,gridSize-2,gridSize-2)
     ctx.save();ctx.globalAlpha=0.4+0.3*Math.sin(Date.now()/150);ctx.fillStyle='white'
     ctx.beginPath();ctx.arc(f.x+gridSize*0.3,f.y+gridSize*0.3,2,0,Math.PI*2);ctx.fill();ctx.restore()
-  } else if(f.type==='diamond'){
-    try{ctx.drawImage(diamondImg,f.x,f.y,gridSize,gridSize)}catch{
-      ctx.fillStyle='#00eeff';ctx.save();ctx.translate(f.x+gridSize/2,f.y+gridSize/2);ctx.rotate(Math.PI/4)
-      ctx.fillRect(-gridSize*0.35,-gridSize*0.35,gridSize*0.7,gridSize*0.7);ctx.restore()
-    }
-  } else if(f.type==='salad'){
+  }else if(f.type==='diamond'){
+    try{ctx.drawImage(diamondImg,f.x,f.y,gridSize,gridSize)}catch{ctx.fillStyle='#00eeff';ctx.save();ctx.translate(f.x+gridSize/2,f.y+gridSize/2);ctx.rotate(Math.PI/4);ctx.fillRect(-gridSize*0.35,-gridSize*0.35,gridSize*0.7,gridSize*0.7);ctx.restore()}
+  }else if(f.type==='salad'){
     try{ctx.drawImage(saladImg,f.x,f.y,gridSize,gridSize)}catch{ctx.fillStyle='#7ec850';ctx.fillRect(f.x+1,f.y+1,gridSize-2,gridSize-2)}
-  } else if(f.type==='gold'){
+  }else if(f.type==='gold'){
     try{ctx.drawImage(goldenAppleImg,f.x,f.y,gridSize,gridSize)}catch{ctx.fillStyle='gold';ctx.fillRect(f.x,f.y,gridSize,gridSize)}
-  } else {
+  }else{
     let ig=f.gold===true
     try{ctx.drawImage(ig?goldenAppleImg:appleImg,f.x,f.y,gridSize,gridSize)}catch{ctx.fillStyle=ig?"gold":"#ff4444";ctx.fillRect(f.x,f.y,gridSize,gridSize)}
   }
@@ -813,8 +895,6 @@ function drawBonusItem(b){
   ctx.save();ctx.strokeStyle=col;ctx.globalAlpha=0.35+0.3*Math.sin(Date.now()/200);ctx.lineWidth=2
   ctx.strokeRect(b.x-1,b.y-1,gridSize+2,gridSize+2);ctx.restore()
 }
-
-/* GAMEOVER / WIN */
 async function gameOver(){
   clearInterval(interval);clearAllBonuses()
   document.getElementById("pauseBtn").classList.add("hidden")
@@ -841,8 +921,6 @@ function goToMenu(){
   document.getElementById("countdownOverlay").classList.add("hidden")
   showScreen('screenMenu');loadUserData().then(updateBestScoreDisplay)
 }
-
-/* LEADERBOARD */
 async function showLeaderboard(){
   showScreen('screenLeaderboard')
   let list=document.getElementById("leaderboardList")
@@ -860,7 +938,7 @@ async function showLeaderboard(){
   }catch{list.innerHTML='<div style="color:var(--neon-pink);font-size:10px">Erreur</div>'}
 }
 async function showProfile(){
-  showScreen('screenProfile'); if(!userData)await loadUserData()
+  showScreen('screenProfile');if(!userData)await loadUserData()
   document.getElementById("profileName").innerText=currentUser
   document.getElementById("profileBest").innerText=userData.bestScore||0
   document.getElementById("profileFruits").innerText=userData.totalFruits||0
@@ -873,296 +951,157 @@ async function showProfile(){
 }
 
 /* ========================================================
-   ===== MODE ONLINE =====
+   MODE ONLINE
    ======================================================== */
-const ONLINE_MAP=800, ONLINE_GRID=20, ONLINE_COLS=ONLINE_MAP/ONLINE_GRID
+const ONLINE_MAP=800,ONLINE_GRID=20,ONLINE_COLS=ONLINE_MAP/ONLINE_GRID
 const PLAYER_COLORS=['#00ff88','#00c3ff','#ff0080','#ffd700','#a78bfa','#f97316','#34d399','#ff6b6b']
+let currentLobbyId=null,isLobbyChef=false,lobbyData=null
+let lobbyRef=null,allLobbiesRef=null,allLobbiesData={}
+let oCanvas=document.getElementById("onlineCanvas"),oCtx=oCanvas.getContext("2d")
+let oSnake=[],oFood=[],oPlayers={},oMyColor='lime'
+let oScore=0,oTail=1,oInterval=null,oTimerInterval=null
+let oTimeLeft=180,oDx=ONLINE_GRID,oDy=0,oNextDx=ONLINE_GRID,oNextDy=0
+let oAlive=true,oInvincible=false,oInvincibleTimer=null,oInvincibleCountdown=0,oSpeedMult=1
 
-let currentLobbyId=null, isLobbyChef=false, lobbyData=null
-let lobbyRef=null, lobbyUnsubscribe=null
-let allLobbiesRef=null, allLobbiesUnsubscribe=null
-
-// Online game state
-let oCanvas=document.getElementById("onlineCanvas")
-let oCtx=oCanvas.getContext("2d")
-let oSnake=[], oFood=[], oPlayers={}, oMyColor='lime'
-let oScore=0, oTail=1, oInterval=null, oTimerInterval=null
-let oTimeLeft=180, oGameDuration=180
-let oDx=ONLINE_GRID, oDy=0, oNextDx=ONLINE_GRID, oNextDy=0
-let oAlive=true, oInvincible=false, oInvincibleTimer=null, oInvincibleCountdown=0
-let oSpeedMult=1
-
-/* ---- LOBBY LIST ---- */
-function showOnlineHub(){
-  showScreen('screenOnlineHub')
-  loadLobbies()
-}
-
-let allLobbiesData={}
+function showOnlineHub(){showScreen('screenOnlineHub');loadLobbies()}
 function loadLobbies(){
-  if(allLobbiesRef) allLobbiesRef.off()
+  if(allLobbiesRef)allLobbiesRef.off()
   allLobbiesRef=rtdb.ref('lobbies')
-  allLobbiesRef.on('value',snap=>{
-    allLobbiesData=snap.val()||{}
-    renderLobbies(allLobbiesData)
-  })
+  allLobbiesRef.on('value',snap=>{allLobbiesData=snap.val()||{};renderLobbies(allLobbiesData)})
 }
-
 function renderLobbies(data){
   let list=document.getElementById("lobbyList")
   let search=document.getElementById("lobbySearchInput").value.toLowerCase()
   list.innerHTML=""
   let entries=Object.entries(data).filter(([id,l])=>l&&l.status==='waiting'&&l.name&&l.chef)
   if(search)entries=entries.filter(([id,l])=>l.name.toLowerCase().includes(search))
-  if(entries.length===0){
-    list.innerHTML='<div style="font-size:10px;color:rgba(255,255,255,0.3);text-align:center;padding:20px">Aucun lobby disponible</div>'
-    return
-  }
+  if(entries.length===0){list.innerHTML='<div style="font-size:10px;color:rgba(255,255,255,0.3);text-align:center;padding:20px">Aucun lobby disponible</div>';return}
   entries.forEach(([id,l])=>{
-    let count=Object.keys(l.players||{}).length
-    let full=count>=l.maxPlayers
+    let count=Object.keys(l.players||{}).length,full=count>=l.maxPlayers
     let div=document.createElement("div")
     div.className="lobby-card"+(full?" full":"")
     let mins=Math.floor(l.duration/60),secs=l.duration%60
-    div.innerHTML=`
-      <div>
-        <div class="lobby-name">${l.name}</div>
-        <div class="lobby-info">⏱ ${mins}min${secs?secs+'s':''} · Chef: ${l.chef}</div>
-      </div>
-      <div class="lobby-players">${count}/${l.maxPlayers}</div>
-    `
+    div.innerHTML=`<div><div class="lobby-name">${l.name}</div><div class="lobby-info">⏱ ${mins}min${secs?secs+'s':''} · Chef: ${l.chef}</div></div><div class="lobby-players">${count}/${l.maxPlayers}</div>`
     if(!full)div.onclick=()=>joinLobby(id,l)
     list.appendChild(div)
   })
 }
-
 function filterLobbies(){renderLobbies(allLobbiesData)}
-
-/* ---- CREATE LOBBY ---- */
 async function createLobby(){
   let name=document.getElementById("lobbyNameInput").value.trim()
   let max=parseInt(document.getElementById("lobbyMaxPlayers").value)
   let dur=parseInt(document.getElementById("lobbyDuration").value)
   if(name.length<5||name.length>15){setMsg("createMsg","Nom entre 5 et 15 caractères","error");return}
   if(/[^a-zA-Z0-9_ -]/.test(name)){setMsg("createMsg","Nom invalide","error");return}
-  // Vérif unicité nom
   let snap=await rtdb.ref('lobbies').orderByChild('name').equalTo(name).once('value')
-  if(snap.exists()){setMsg("createMsg","Ce nom de lobby est déjà pris","error");return}
+  if(snap.exists()){setMsg("createMsg","Ce nom est déjà pris","error");return}
   let lobbyId='lobby_'+Date.now()+'_'+currentUser
-  let lobbyObj={
-    name,maxPlayers:max,duration:dur,chef:currentUser,
-    status:'waiting',createdAt:Date.now(),
-    players:{[currentUser]:{name:currentUser,ready:false,score:0,tail:1,color:PLAYER_COLORS[0]}}
-  }
-  await rtdb.ref('lobbies/'+lobbyId).set(lobbyObj)
-  currentLobbyId=lobbyId; isLobbyChef=true
-  enterLobbyRoom(lobbyId)
+  await rtdb.ref('lobbies/'+lobbyId).set({name,maxPlayers:max,duration:dur,chef:currentUser,status:'waiting',createdAt:Date.now(),players:{[currentUser]:{name:currentUser,ready:false,score:0,tail:1,color:PLAYER_COLORS[0]}}})
+  currentLobbyId=lobbyId;isLobbyChef=true;enterLobbyRoom(lobbyId)
 }
-
-/* ---- JOIN LOBBY ---- */
 function joinLobby(id,l){
   let count=Object.keys(l.players||{}).length
   if(count>=l.maxPlayers){setMsg("hubMsg","Lobby plein","error");return}
-  // Assigner couleur
   let usedColors=Object.values(l.players||{}).map(p=>p.color)
   let myColor=PLAYER_COLORS.find(c=>!usedColors.includes(c))||PLAYER_COLORS[count%PLAYER_COLORS.length]
   rtdb.ref('lobbies/'+id+'/players/'+currentUser).set({name:currentUser,ready:false,score:0,tail:1,color:myColor})
-  currentLobbyId=id; isLobbyChef=false
-  enterLobbyRoom(id)
+  currentLobbyId=id;isLobbyChef=false;enterLobbyRoom(id)
 }
-
-/* ---- LOBBY ROOM ---- */
 function enterLobbyRoom(id){
   showScreen('screenLobbyRoom')
   lobbyRef=rtdb.ref('lobbies/'+id)
-  if(lobbyUnsubscribe)lobbyUnsubscribe()
   lobbyRef.on('value',snap=>{
     if(!snap.exists()){
-      // Lobby supprimé (chef parti)
       setMsg("lobbyMsg","Le lobby a été fermé","error")
       setTimeout(()=>{currentLobbyId=null;showScreen('screenOnlineHub');loadLobbies()},2000)
       return
     }
-    lobbyData=snap.val()
-    renderLobbyRoom(lobbyData)
-    // Chef a lancé ?
-    if(lobbyData.status==='starting'){
-      startOnlineGameClient(lobbyData)
-    }
+    lobbyData=snap.val();renderLobbyRoom(lobbyData)
+    if(lobbyData.status==='starting')startOnlineGameClient(lobbyData)
   })
 }
-
 function renderLobbyRoom(l){
   document.getElementById("lobbyRoomTitle").innerText=l.name
-  let count=Object.keys(l.players||{}).length
-  let mins=Math.floor(l.duration/60),secs=l.duration%60
+  let count=Object.keys(l.players||{}).length,mins=Math.floor(l.duration/60),secs=l.duration%60
   document.getElementById("lobbyRoomInfo").innerText=`${count}/${l.maxPlayers} joueurs · ${mins}min${secs?secs+'s':''}`
-  // Players
   let pl=document.getElementById("lobbyPlayerList");pl.innerHTML=""
   Object.values(l.players||{}).forEach(p=>{
     let row=document.createElement("div")
     row.className="player-row"+(p.name===l.chef?" chef":"")
-    row.innerHTML=`
-      <div class="player-name">
-        <div style="width:12px;height:12px;border-radius:50%;background:${p.color||'lime'}"></div>
-        <span>${p.name}</span>
-        ${p.name===l.chef?'<span class="chef-badge">👑 Chef</span>':''}
-      </div>
-      ${isLobbyChef&&p.name!==currentUser?`<button class="btn btn-danger" style="padding:4px 10px;font-size:10px;margin:0" onclick="kickPlayer('${p.name}')">Kick</button>`:''}
-    `
+    row.innerHTML=`<div class="player-name"><div style="width:12px;height:12px;border-radius:50%;background:${p.color||'lime'}"></div><span>${p.name}</span>${p.name===l.chef?'<span class="chef-badge">👑 Chef</span>':''}</div>${isLobbyChef&&p.name!==currentUser?`<button class="btn btn-danger" style="padding:4px 10px;font-size:10px;margin:0" onclick="kickPlayer('${p.name}')">Kick</button>`:''}`
     pl.appendChild(row)
   })
-  // Contrôles chef
   let cc=document.getElementById("lobbyChefControls")
-  if(isLobbyChef){
-    cc.classList.remove("hidden");cc.style.display="flex"
-    let btn=document.getElementById("startOnlineBtn")
-    btn.disabled=count<2
-    btn.style.opacity=count<2?'0.4':'1'
-  } else {
-    cc.classList.add("hidden")
-  }
+  if(isLobbyChef){cc.classList.remove("hidden");cc.style.display="flex";let btn=document.getElementById("startOnlineBtn");btn.disabled=count<2;btn.style.opacity=count<2?'0.4':'1'}
+  else cc.classList.add("hidden")
 }
-
-function kickPlayer(name){
-  if(!isLobbyChef)return
-  rtdb.ref('lobbies/'+currentLobbyId+'/players/'+name).remove()
-}
-
+function kickPlayer(name){if(!isLobbyChef)return;rtdb.ref('lobbies/'+currentLobbyId+'/players/'+name).remove()}
 function leaveLobby(){
   if(!currentLobbyId)return
   if(lobbyRef)lobbyRef.off()
-  // Retirer présence si on quitte pendant une partie
   rtdb.ref('lobbies/'+currentLobbyId+'/presence/'+currentUser).remove()
-  if(isLobbyChef){
-    rtdb.ref('lobbies/'+currentLobbyId).remove()
-  } else {
-    rtdb.ref('lobbies/'+currentLobbyId+'/players/'+currentUser).remove()
-  }
+  if(isLobbyChef)rtdb.ref('lobbies/'+currentLobbyId).remove()
+  else rtdb.ref('lobbies/'+currentLobbyId+'/players/'+currentUser).remove()
   currentLobbyId=null;isLobbyChef=false;lobbyData=null
   showScreen('screenOnlineHub');loadLobbies()
 }
-
-/* ---- LAUNCH GAME (CHEF) ---- */
 async function launchOnlineGame(){
   if(!isLobbyChef||!currentLobbyId)return
   let snap=await rtdb.ref('lobbies/'+currentLobbyId).once('value')
-  let l=snap.val(); if(!l)return
+  let l=snap.val();if(!l)return
   let count=Object.keys(l.players||{}).length
   if(count<2){setMsg("lobbyMsg","Minimum 2 joueurs","error");return}
-  // Générer spawns et food initiale
-  let spawns=generateSpawns(count)
-  let playerKeys=Object.keys(l.players)
-  let playersInit={}
-  playerKeys.forEach((name,i)=>{
-    playersInit[name]={
-      name,color:l.players[name].color,score:0,tail:1,alive:true,
-      snake:[spawns[i]],dx:ONLINE_GRID,dy:0
-    }
-  })
-  let foods=[]
-  for(let i=0;i<5;i++)foods.push(genOnlineFood([],playersInit))
-  await rtdb.ref('lobbies/'+currentLobbyId).update({
-    status:'starting',startedAt:Date.now(),
-    playersInit:playersInit,foods:JSON.stringify(foods)
-  })
+  let spawns=generateSpawns(count),playerKeys=Object.keys(l.players),playersInit={}
+  playerKeys.forEach((name,i)=>{playersInit[name]={name,color:l.players[name].color,score:0,tail:1,alive:true,snake:[spawns[i]],dx:ONLINE_GRID,dy:0}})
+  let foods=[];for(let i=0;i<5;i++)foods.push(genOnlineFood([],playersInit))
+  await rtdb.ref('lobbies/'+currentLobbyId).update({status:'starting',startedAt:Date.now(),playersInit,foods:JSON.stringify(foods)})
 }
-
 function generateSpawns(count){
-  // Positions de spawn bien au centre de la map, loin des bords
-  let spots=[
-    {x:200,y:200},{x:560,y:200},{x:200,y:560},{x:560,y:560},
-    {x:380,y:140},{x:380,y:620},{x:140,y:380},{x:620,y:380}
-  ]
-  return spots.slice(0,count).map(s=>({
-    x:Math.round(s.x/ONLINE_GRID)*ONLINE_GRID,
-    y:Math.round(s.y/ONLINE_GRID)*ONLINE_GRID
-  }))
+  let spots=[{x:200,y:200},{x:560,y:200},{x:200,y:560},{x:560,y:560},{x:380,y:140},{x:380,y:620},{x:140,y:380},{x:620,y:380}]
+  return spots.slice(0,count).map(s=>({x:Math.round(s.x/ONLINE_GRID)*ONLINE_GRID,y:Math.round(s.y/ONLINE_GRID)*ONLINE_GRID}))
 }
-
 function genOnlineFood(existing,players){
   let occ=[...existing]
   if(players)Object.values(players).forEach(p=>{if(p.snake)occ.push(...p.snake)})
   let pos,att=0
   do{pos={x:Math.floor(Math.random()*ONLINE_COLS)*ONLINE_GRID,y:Math.floor(Math.random()*ONLINE_COLS)*ONLINE_GRID};att++}
   while(att<300&&occ.some(p=>p&&p.x===pos.x&&p.y===pos.y))
-  let r=Math.random()
-  let type='normal'
-  if(r<1/20)type='rainbow'
-  else if(r<1/20+1/15)type='diamond'
-  else if(r<1/20+1/15+1/8)type='salad'
-  else if(r<1/20+1/15+1/8+1/10)type='gold'
+  let r=Math.random(),type='normal'
+  if(r<1/20)type='rainbow';else if(r<1/20+1/15)type='diamond';else if(r<1/20+1/15+1/8)type='salad';else if(r<1/20+1/15+1/8+1/10)type='gold'
   return{x:pos.x,y:pos.y,type}
 }
-
-/* ---- START GAME CLIENT ---- */
 function startOnlineGameClient(l){
   if(lobbyRef)lobbyRef.off()
-  // VS Screen
   showScreen('screenOnlineVS')
   let vsList=document.getElementById("vsPlayerList");vsList.innerHTML=""
   let playerNames=Object.keys(l.players||{})
   playerNames.forEach((name,i)=>{
-    let span=document.createElement("span")
-    span.style.color=l.players[name].color||'white'
-    span.textContent=name
-    if(i<playerNames.length-1){
-      vsList.appendChild(span)
-      let vs=document.createElement("span");vs.style.color='rgba(255,255,255,0.3)';vs.textContent=' VS '
-      vsList.appendChild(vs)
-    } else vsList.appendChild(span)
+    let span=document.createElement("span");span.style.color=l.players[name].color||'white';span.textContent=name
+    if(i<playerNames.length-1){vsList.appendChild(span);let vs=document.createElement("span");vs.style.color='rgba(255,255,255,0.3)';vs.textContent=' VS ';vsList.appendChild(vs)}
+    else vsList.appendChild(span)
   })
-  // Countdown 3,2,1 GO avant de lancer
   setTimeout(()=>{
-    showScreen('screenOnlineVS') // garde l'écran VS pendant le countdown
-    let count=3
-    let vsTitle=document.querySelector('#screenOnlineVS .main-title')
-    if(vsTitle) vsTitle.innerText='⚔ VS'
-    // Afficher le countdown par dessus
-    let cdEl=document.getElementById("countdownOverlay")
-    let numEl=document.getElementById("countdownNumber")
-    cdEl.classList.remove("hidden")
-    numEl.textContent=count
-    numEl.style.color="var(--neon-green)"
-    numEl.style.textShadow="0 0 40px var(--neon-green)"
+    let cdEl=document.getElementById("countdownOverlay"),numEl=document.getElementById("countdownNumber")
+    cdEl.classList.remove("hidden");let count=3;numEl.textContent=count;numEl.style.color="var(--neon-green)";numEl.style.textShadow="0 0 40px var(--neon-green)"
     let t=setInterval(()=>{
       count--
       if(count===0){numEl.textContent="GO !";numEl.style.color="var(--neon-gold)";numEl.style.textShadow="0 0 40px var(--neon-gold)"}
-      else if(count<0){
-        clearInterval(t)
-        cdEl.classList.add("hidden")
-        numEl.style.color="var(--neon-green)";numEl.style.textShadow="0 0 40px var(--neon-green)"
-        launchOnlineLoop(l)
-      } else {
-        numEl.style.animation="none";numEl.offsetHeight;numEl.style.animation="cdPop 0.4s ease"
-        numEl.textContent=count
-      }
+      else if(count<0){clearInterval(t);cdEl.classList.add("hidden");numEl.style.color="var(--neon-green)";numEl.style.textShadow="0 0 40px var(--neon-green)";launchOnlineLoop(l)}
+      else{numEl.style.animation="none";numEl.offsetHeight;numEl.style.animation="cdPop 0.4s ease";numEl.textContent=count}
     },900)
   },2500)
 }
-
 function launchOnlineLoop(l){
-  // Init state
   let pi=l.playersInit||{}
   oPlayers=JSON.parse(JSON.stringify(pi))
   oFood=JSON.parse(l.foods||'[]')
   oMyColor=oPlayers[currentUser]?.color||'lime'
   oSnake=oPlayers[currentUser]?.snake||[{x:400,y:400}]
-  oScore=0;oTail=1;oAlive=true;oInvincible=false
-  // Direction initiale vers le centre
-  let startHead=oSnake[0]||{x:400,y:400}
-  let cx=ONLINE_MAP/2, cy=ONLINE_MAP/2
-  if(Math.abs(startHead.x-cx)>Math.abs(startHead.y-cy)){
-    oDx=startHead.x<cx?ONLINE_GRID:-ONLINE_GRID; oDy=0
-    oNextDx=oDx; oNextDy=0
-  } else {
-    oDx=0; oDy=startHead.y<cy?ONLINE_GRID:-ONLINE_GRID
-    oNextDx=0; oNextDy=oDy
-  }
-  oSpeedMult=1
-  oTimeLeft=l.duration||180;oGameDuration=l.duration||180
-
-  // Show game
+  oScore=0;oTail=1;oAlive=true;oInvincible=false;oSpeedMult=1
+  let startHead=oSnake[0]||{x:400,y:400},cx=ONLINE_MAP/2,cy=ONLINE_MAP/2
+  if(Math.abs(startHead.x-cx)>Math.abs(startHead.y-cy)){oDx=startHead.x<cx?ONLINE_GRID:-ONLINE_GRID;oDy=0;oNextDx=oDx;oNextDy=0}
+  else{oDx=0;oDy=startHead.y<cy?ONLINE_GRID:-ONLINE_GRID;oNextDx=0;oNextDy=oDy}
+  oTimeLeft=l.duration||180
   document.getElementById("onlineGame").classList.remove("hidden")
   document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'))
   document.getElementById("deathScreen").classList.add("hidden")
@@ -1170,335 +1109,193 @@ function launchOnlineLoop(l){
   document.getElementById("invincibleBar").classList.add("hidden")
   document.getElementById("killFeed").innerHTML=""
 
-  // ===== PRESENCE : détecter déconnexion =====
-  let presenceRef = rtdb.ref('lobbies/'+currentLobbyId+'/presence/'+currentUser)
-  presenceRef.onDisconnect().remove()
-  presenceRef.set(true)
-
-  // Surveiller la présence — si quelqu'un part, tout le monde retourne au menu
-  let presenceListRef = rtdb.ref('lobbies/'+currentLobbyId+'/presence')
-  presenceListRef.on('value', snap=>{
-    if(!oInterval) return // partie déjà terminée, ignorer
-    let present = snap.val() || {}
-    let presentNames = Object.keys(present)
-    let presentCount = presentNames.length
-    let totalPlayers = Object.keys(oPlayers).length
-
-    // Un joueur s'est déconnecté
-    if(presentCount < totalPlayers){
-      // Trouver qui est parti
-      Object.keys(oPlayers).forEach(name=>{
-        if(!present[name] && oPlayers[name]){
-          oPlayers[name].alive=false; oPlayers[name].snake=[]
-        }
-      })
-      // Si plus qu'un seul ou personne → fin de partie immédiate
-      if(presentCount <= 1){
+  // PRESENCE
+  let presenceRef=rtdb.ref('lobbies/'+currentLobbyId+'/presence/'+currentUser)
+  presenceRef.onDisconnect().remove();presenceRef.set(true)
+  let presenceListRef=rtdb.ref('lobbies/'+currentLobbyId+'/presence')
+  presenceListRef.on('value',snap=>{
+    if(!oInterval)return
+    let present=snap.val()||{},presentCount=Object.keys(present).length,totalPlayers=Object.keys(oPlayers).length
+    if(presentCount<totalPlayers){
+      Object.keys(oPlayers).forEach(name=>{if(!present[name]&&oPlayers[name]){oPlayers[name].alive=false;oPlayers[name].snake=[]}})
+      if(presentCount<=1){
         presenceListRef.off()
-        clearInterval(oInterval);clearInterval(oTimerInterval)
-        oInterval=null;oTimerInterval=null
+        clearInterval(oInterval);clearInterval(oTimerInterval);oInterval=null;oTimerInterval=null
         document.removeEventListener("keydown",onlineKeydown)
         rtdb.ref('lobbies/'+currentLobbyId+'/presence/'+currentUser).remove()
-        // Envoyer signal déconnexion à tout le monde via RTDB
         rtdb.ref('lobbies/'+currentLobbyId+'/disconnected').set(true)
-        document.getElementById("onlineGame").classList.add("hidden")
-        document.getElementById("deathScreen").classList.add("hidden")
-        document.getElementById("invincibleBar").classList.add("hidden")
-        document.getElementById("onlineResultScreen").classList.add("hidden")
-        document.getElementById("killFeed").innerHTML=""
-        showScreen('screenMenu')
-        loadUserData().then(updateBestScoreDisplay)
+        cleanupOnlineUI()
+        if(isLobbyChef)rtdb.ref('lobbies/'+currentLobbyId).remove()
+        showScreen('screenMenu');loadUserData().then(updateBestScoreDisplay)
         setTimeout(()=>alert("Un joueur s'est déconnecté, désolé !"),100)
-        if(isLobbyChef) rtdb.ref('lobbies/'+currentLobbyId).remove()
         return
       }
     }
   })
-
-  // Écouter signal déconnexion envoyé par quelqu'un d'autre
-  rtdb.ref('lobbies/'+currentLobbyId+'/disconnected').on('value', snap=>{
-    if(snap.val()===true && oInterval){
-      clearInterval(oInterval);clearInterval(oTimerInterval)
-      oInterval=null;oTimerInterval=null
+  rtdb.ref('lobbies/'+currentLobbyId+'/disconnected').on('value',snap=>{
+    if(snap.val()===true&&oInterval){
+      clearInterval(oInterval);clearInterval(oTimerInterval);oInterval=null;oTimerInterval=null
       document.removeEventListener("keydown",onlineKeydown)
       rtdb.ref('lobbies/'+currentLobbyId+'/presence/'+currentUser).remove()
       rtdb.ref('lobbies/'+currentLobbyId+'/disconnected').off()
       presenceListRef.off()
-      document.getElementById("onlineGame").classList.add("hidden")
-      document.getElementById("deathScreen").classList.add("hidden")
-      document.getElementById("invincibleBar").classList.add("hidden")
-      document.getElementById("onlineResultScreen").classList.add("hidden")
-      document.getElementById("killFeed").innerHTML=""
-      showScreen('screenMenu')
-      loadUserData().then(updateBestScoreDisplay)
+      cleanupOnlineUI()
+      showScreen('screenMenu');loadUserData().then(updateBestScoreDisplay)
       setTimeout(()=>alert("Un joueur s'est déconnecté, désolé !"),100)
     }
   })
 
-  // ===== FOOD SYNC =====
-  // Le chef gère la food et la publie, tous lisent depuis RTDB
-  let foodRef = rtdb.ref('lobbies/'+currentLobbyId+'/sharedFood')
-
+  // FOOD SYNC
+  let foodRef=rtdb.ref('lobbies/'+currentLobbyId+'/sharedFood')
   if(isLobbyChef){
-    // Publier food initiale
     foodRef.set(JSON.stringify(oFood))
-    // Spawner une nouvelle pomme toutes les secondes
-    let foodSpawnInterval = setInterval(()=>{
+    let foodSpawnInterval=setInterval(()=>{
       if(!oInterval){clearInterval(foodSpawnInterval);return}
-      if(oFood.length < 15){
-        oFood.push(genOnlineFood(oFood, oPlayers))
-        foodRef.set(JSON.stringify(oFood))
-      }
+      if(oFood.length<15){oFood.push(genOnlineFood(oFood,oPlayers));foodRef.set(JSON.stringify(oFood))}
     },1000)
-  } else {
-    // Non-chef : lire la food périodiquement MAIS ignorer si on vient de manger
-    // pour éviter que Firebase écrase notre suppression locale
-    let lastAteTime = 0
-    foodRef.on('value', snap=>{
-      if(!snap.val()) return
-      let now = Date.now()
-      // Ignorer les updates Firebase pendant 400ms après avoir mangé
-      // (le temps que notre propre publication soit reçue)
-      if(now - lastAteTime < 400) return
-      oFood = JSON.parse(snap.val())
+  }else{
+    let lastAteTime=0
+    foodRef.on('value',snap=>{
+      if(!snap.val())return
+      if(Date.now()-lastAteTime<400)return
+      oFood=JSON.parse(snap.val())
     })
-    // Exposer lastAteTime pour que onlineStep puisse le mettre à jour
-    window._onlineLastAteTime = ()=>{ lastAteTime = Date.now() }
+    window._onlineLastAteTime=()=>{lastAteTime=Date.now()}
   }
 
-  // Sync avec RTDB - état des joueurs
   let gameRef=rtdb.ref('lobbies/'+currentLobbyId+'/game')
   oInterval=setInterval(()=>{
-    onlineStep(foodRef)
-    publishMyState(gameRef)
-    // Lire les autres joueurs
+    onlineStep(foodRef);publishMyState(gameRef)
     gameRef.once('value',snap=>{
       let gdata=snap.val()||{}
       Object.keys(gdata).forEach(name=>{
         if(name===currentUser)return
         let pd=gdata[name]
-        if(pd&&oPlayers[name]){
-          oPlayers[name].snake=pd.snake||[]
-          oPlayers[name].score=pd.score||0
-          oPlayers[name].tail=pd.tail||1
-          oPlayers[name].alive=pd.alive!==false
-        }
+        if(pd&&oPlayers[name]){oPlayers[name].snake=pd.snake||[];oPlayers[name].score=pd.score||0;oPlayers[name].tail=pd.tail||1;oPlayers[name].alive=pd.alive!==false}
       })
     })
     drawOnline()
   },100)
-
-  // Timer
-  oTimerInterval=setInterval(()=>{
-    oTimeLeft--
-    updateOnlineHUD()
-    if(oTimeLeft<=0)endOnlineGame()
-  },1000)
-
-  // Controls online
+  oTimerInterval=setInterval(()=>{oTimeLeft--;updateOnlineHUD();if(oTimeLeft<=0)endOnlineGame()},1000)
   document.addEventListener("keydown",onlineKeydown)
-}
 
-function publishMyState(ref){
-  ref.child(currentUser).set({
-    snake:oSnake,score:oScore,tail:oTail,alive:oAlive,
-    dx:oDx,dy:oDy,color:oMyColor
-  })
+  // SWIPE sur canvas online
+  let oStartX=0,oStartY=0
+  oCanvas.addEventListener("touchstart",e=>{oStartX=e.touches[0].clientX;oStartY=e.touches[0].clientY},{passive:true})
+  oCanvas.addEventListener("touchend",e=>{
+    let dX=e.changedTouches[0].clientX-oStartX,dY=e.changedTouches[0].clientY-oStartY
+    if(Math.abs(dX)>Math.abs(dY)){if(dX>0&&oDx===0&&oNextDx===0){oNextDx=ONLINE_GRID;oNextDy=0}else if(dX<0&&oDx===0&&oNextDx===0){oNextDx=-ONLINE_GRID;oNextDy=0}}
+    else{if(dY>0&&oDy===0&&oNextDy===0){oNextDx=0;oNextDy=ONLINE_GRID}else if(dY<0&&oDy===0&&oNextDy===0){oNextDx=0;oNextDy=-ONLINE_GRID}}
+  },{passive:true})
 }
-
+function cleanupOnlineUI(){
+  document.getElementById("onlineGame").classList.add("hidden")
+  document.getElementById("deathScreen").classList.add("hidden")
+  document.getElementById("invincibleBar").classList.add("hidden")
+  document.getElementById("onlineResultScreen").classList.add("hidden")
+  document.getElementById("killFeed").innerHTML=""
+}
+function publishMyState(ref){ref.child(currentUser).set({snake:oSnake,score:oScore,tail:oTail,alive:oAlive,dx:oDx,dy:oDy,color:oMyColor})}
 function onlineStep(foodRef){
   if(!oAlive)return
   oDx=oNextDx;oDy=oNextDy
   let head={x:oSnake[0].x+oDx,y:oSnake[0].y+oDy}
-  // Murs = mort
-  if(head.x<0||head.x>=ONLINE_MAP||head.y<0||head.y>=ONLINE_MAP){
-    onlineDie("un mur 😬");return
-  }
-  // Collision ennemis (sauf invincible)
+  if(head.x<0||head.x>=ONLINE_MAP||head.y<0||head.y>=ONLINE_MAP){onlineDie("un mur 😬");return}
   if(!oInvincible){
     for(let name in oPlayers){
       if(name===currentUser)continue
-      let ep=oPlayers[name]
-      if(!ep.alive)continue
-      let eSnake=ep.snake||[]
-      for(let seg of eSnake){
-        if(seg&&head.x===seg.x&&head.y===seg.y){
-          addKillFeed(`${name} a tué ${currentUser}`)
-          onlineDie(name);return
-        }
-      }
+      let ep=oPlayers[name];if(!ep.alive)continue
+      for(let seg of(ep.snake||[])){if(seg&&head.x===seg.x&&head.y===seg.y){addKillFeed(`${name} a tué ${currentUser}`);onlineDie(name);return}}
     }
   }
   oSnake.unshift(head)
-  // Manger
-  let ate=false, foodChanged=false
+  let ate=false,foodChanged=false
   for(let i=oFood.length-1;i>=0;i--){
     let f=oFood[i]
     if(f&&head.x===f.x&&head.y===f.y){
-      let pts=getOnlineFoodPts(f)
-      oScore+=pts
+      oScore+=getOnlineFoodPts(f)
       if(f.type==='salad'&&oSnake.length>1)oSnake.pop()
-      oFood.splice(i,1)
-      foodChanged=true
-      // Signaler qu'on vient de manger (pour bloquer le listener Firebase temporairement)
-      if(!isLobbyChef && window._onlineLastAteTime) window._onlineLastAteTime()
+      oFood.splice(i,1);foodChanged=true
+      if(!isLobbyChef&&window._onlineLastAteTime)window._onlineLastAteTime()
       ate=true;break
     }
   }
   if(!ate)oSnake.pop()
-  // Tout le monde publie la food quand il mange
-  if(foodChanged && foodRef){
-    foodRef.set(JSON.stringify(oFood))
-  }
+  if(foodChanged&&foodRef)foodRef.set(JSON.stringify(oFood))
   oTail=oSnake.length
-  // Reset queue 100
-  if(oSnake.length>=100){
-    let h=oSnake[0];oSnake=[{x:h.x,y:h.y}];oTail=1;oSpeedMult*=1.5
-  }
+  if(oSnake.length>=100){let h=oSnake[0];oSnake=[{x:h.x,y:h.y}];oTail=1;oSpeedMult*=1.5}
   updateOnlineHUD()
 }
-
-function getOnlineFoodPts(f){
-  if(f.type==='gold')return 3;if(f.type==='diamond')return 5;if(f.type==='rainbow')return 10;return 1
-}
-
+function getOnlineFoodPts(f){if(f.type==='gold')return 3;if(f.type==='diamond')return 5;if(f.type==='rainbow')return 10;return 1}
 function onlineDie(killer){
   oAlive=false;oScore=Math.max(0,oScore-10)
   document.getElementById("deathScreen").classList.remove("hidden")
   document.getElementById("deathMsg").innerText="Tu as été tué par "+killer
   document.getElementById("deathBy").innerText=killer==="un mur 😬"?"Tu as foncé dans un mur !":""
-  let rt=5
-  document.getElementById("respawnTimer").innerText=rt
-  let ri=setInterval(()=>{
-    rt--;document.getElementById("respawnTimer").innerText=rt
-    if(rt<=0){clearInterval(ri);onlineRespawn()}
-  },1000)
+  let rt=5;document.getElementById("respawnTimer").innerText=rt
+  let ri=setInterval(()=>{rt--;document.getElementById("respawnTimer").innerText=rt;if(rt<=0){clearInterval(ri);onlineRespawn()}},1000)
 }
-
 function onlineRespawn(){
   document.getElementById("deathScreen").classList.add("hidden")
-  // Spawn aléatoire mais loin des bords (marge de 5 cases)
   let margin=5*ONLINE_GRID
   let sx=Math.floor(Math.random()*((ONLINE_MAP-margin*2)/ONLINE_GRID))*ONLINE_GRID+margin
   let sy=Math.floor(Math.random()*((ONLINE_MAP-margin*2)/ONLINE_GRID))*ONLINE_GRID+margin
   oSnake=[{x:sx,y:sy}]
-  // Direction vers le centre pour ne pas foncer vers un mur
-  let cx=ONLINE_MAP/2, cy=ONLINE_MAP/2
-  if(Math.abs(sx-cx)>Math.abs(sy-cy)){
-    oDx=sx<cx?ONLINE_GRID:-ONLINE_GRID; oDy=0
-    oNextDx=oDx; oNextDy=0
-  } else {
-    oDx=0; oDy=sy<cy?ONLINE_GRID:-ONLINE_GRID
-    oNextDx=0; oNextDy=oDy
-  }
+  let cx=ONLINE_MAP/2,cy=ONLINE_MAP/2
+  if(Math.abs(sx-cx)>Math.abs(sy-cy)){oDx=sx<cx?ONLINE_GRID:-ONLINE_GRID;oDy=0;oNextDx=oDx;oNextDy=0}
+  else{oDx=0;oDy=sy<cy?ONLINE_GRID:-ONLINE_GRID;oNextDx=0;oNextDy=oDy}
   oAlive=true;oInvincible=true;oInvincibleCountdown=5
   document.getElementById("invincibleBar").classList.remove("hidden")
   document.getElementById("invincibleTimer").innerText=5
   if(oInvincibleTimer)clearTimeout(oInvincibleTimer)
-  let ic=setInterval(()=>{
-    oInvincibleCountdown--;document.getElementById("invincibleTimer").innerText=oInvincibleCountdown
-    if(oInvincibleCountdown<=0){clearInterval(ic);oInvincible=false;document.getElementById("invincibleBar").classList.add("hidden")}
-  },1000)
+  let ic=setInterval(()=>{oInvincibleCountdown--;document.getElementById("invincibleTimer").innerText=oInvincibleCountdown;if(oInvincibleCountdown<=0){clearInterval(ic);oInvincible=false;document.getElementById("invincibleBar").classList.add("hidden")}},1000)
   oInvincibleTimer=setTimeout(()=>{oInvincible=false;document.getElementById("invincibleBar").classList.add("hidden")},5000)
 }
-
 function addKillFeed(msg){
   let kf=document.getElementById("killFeed")
   let div=document.createElement("div");div.className="kill-msg";div.textContent="⚔ "+msg
   kf.appendChild(div);setTimeout(()=>div.remove(),3000)
-  // Broadcast
   rtdb.ref('lobbies/'+currentLobbyId+'/killfeed').push({msg,t:Date.now()})
 }
-
 function drawOnline(){
   oCtx.fillStyle="#0a0f0a";oCtx.fillRect(0,0,oCanvas.width,oCanvas.height)
-
-  // Camera centrée sur notre tête
-  let camX=oSnake.length>0?oSnake[0].x:ONLINE_MAP/2
-  let camY=oSnake.length>0?oSnake[0].y:ONLINE_MAP/2
-  let vw=oCanvas.width, vh=oCanvas.height
-  let offX=vw/2-camX-ONLINE_GRID/2, offY=vh/2-camY-ONLINE_GRID/2
-
+  let camX=oSnake.length>0?oSnake[0].x:ONLINE_MAP/2,camY=oSnake.length>0?oSnake[0].y:ONLINE_MAP/2
+  let offX=oCanvas.width/2-camX-ONLINE_GRID/2,offY=oCanvas.height/2-camY-ONLINE_GRID/2
   oCtx.save();oCtx.translate(offX,offY)
-
-  // Fond de la map
-  oCtx.fillStyle="#0d1117"
-  oCtx.fillRect(0,0,ONLINE_MAP,ONLINE_MAP)
-
-  // Grille
+  oCtx.fillStyle="#0d1117";oCtx.fillRect(0,0,ONLINE_MAP,ONLINE_MAP)
   oCtx.strokeStyle="rgba(0,255,136,0.03)";oCtx.lineWidth=1
   for(let x=0;x<=ONLINE_MAP;x+=ONLINE_GRID){oCtx.beginPath();oCtx.moveTo(x,0);oCtx.lineTo(x,ONLINE_MAP);oCtx.stroke()}
   for(let y=0;y<=ONLINE_MAP;y+=ONLINE_GRID){oCtx.beginPath();oCtx.moveTo(0,y);oCtx.lineTo(ONLINE_MAP,y);oCtx.stroke()}
-
-  // MURS visibles
-  oCtx.strokeStyle="rgba(255,0,128,0.8)"
-  oCtx.lineWidth=4
-  oCtx.shadowColor="rgba(255,0,128,0.6)"
-  oCtx.shadowBlur=12
+  oCtx.strokeStyle="rgba(255,0,128,0.8)";oCtx.lineWidth=4;oCtx.shadowColor="rgba(255,0,128,0.6)";oCtx.shadowBlur=12
   oCtx.strokeRect(2,2,ONLINE_MAP-4,ONLINE_MAP-4)
-  // Deuxième bordure pour effet néon
-  oCtx.strokeStyle="rgba(255,0,128,0.3)"
-  oCtx.lineWidth=8
-  oCtx.strokeRect(0,0,ONLINE_MAP,ONLINE_MAP)
-  oCtx.shadowBlur=0
-
-  // Food
+  oCtx.strokeStyle="rgba(255,0,128,0.3)";oCtx.lineWidth=8;oCtx.strokeRect(0,0,ONLINE_MAP,ONLINE_MAP);oCtx.shadowBlur=0
   oFood.forEach(f=>drawOnlineFood(f))
-
-  // Autres joueurs (semi-transparent)
   Object.entries(oPlayers).forEach(([name,p])=>{
-    if(name===currentUser)return
-    if(!p.alive)return
+    if(name===currentUser||!p.alive)return
     let seg=p.snake||[]
-    seg.forEach((s,i)=>{
-      if(!s)return
-      oCtx.globalAlpha=i===0?0.6:0.3
-      oCtx.fillStyle=p.color||'cyan'
-      oCtx.fillRect(s.x+1,s.y+1,ONLINE_GRID-2,ONLINE_GRID-2)
-    })
+    seg.forEach((s,i)=>{if(!s)return;oCtx.globalAlpha=i===0?0.6:0.3;oCtx.fillStyle=p.color||'cyan';oCtx.fillRect(s.x+1,s.y+1,ONLINE_GRID-2,ONLINE_GRID-2)})
     oCtx.globalAlpha=1
-    if(seg[0]){
-      oCtx.save();oCtx.font="bold 11px 'Orbitron',monospace";oCtx.textAlign="center"
-      oCtx.fillStyle=p.color||'cyan';oCtx.shadowColor=p.color||'cyan';oCtx.shadowBlur=6
-      oCtx.fillText(name,seg[0].x+ONLINE_GRID/2,seg[0].y-4);oCtx.restore()
-    }
+    if(seg[0]){oCtx.save();oCtx.font="bold 11px 'Orbitron',monospace";oCtx.textAlign="center";oCtx.fillStyle=p.color||'cyan';oCtx.shadowColor=p.color||'cyan';oCtx.shadowBlur=6;oCtx.fillText(name,seg[0].x+ONLINE_GRID/2,seg[0].y-4);oCtx.restore()}
   })
-
-  // Mon serpent
   oSnake.forEach((s,i)=>{
     if(!s)return
     let col=oInvincible?`hsl(${(Date.now()/5)%360},100%,60%)`:oMyColor
-    if(i===0){
-      oCtx.globalAlpha=oInvincible?0.7:1
-      oCtx.fillStyle=col;oCtx.fillRect(s.x,s.y,ONLINE_GRID,ONLINE_GRID)
-      try{oCtx.drawImage(snakeHeadImg,s.x,s.y,ONLINE_GRID,ONLINE_GRID)}catch{}
-    } else {
-      let a=Math.max(0.4,1-i/oSnake.length*0.6)
-      oCtx.globalAlpha=oInvincible?0.5:a
-      oCtx.fillStyle=col;oCtx.fillRect(s.x+1,s.y+1,ONLINE_GRID-2,ONLINE_GRID-2)
-    }
+    if(i===0){oCtx.globalAlpha=oInvincible?0.7:1;oCtx.fillStyle=col;oCtx.fillRect(s.x,s.y,ONLINE_GRID,ONLINE_GRID);try{oCtx.drawImage(snakeHeadImg,s.x,s.y,ONLINE_GRID,ONLINE_GRID)}catch{}}
+    else{let a=Math.max(0.4,1-i/oSnake.length*0.6);oCtx.globalAlpha=oInvincible?0.5:a;oCtx.fillStyle=col;oCtx.fillRect(s.x+1,s.y+1,ONLINE_GRID-2,ONLINE_GRID-2)}
   })
-  oCtx.globalAlpha=1
-  oCtx.restore()
+  oCtx.globalAlpha=1;oCtx.restore()
 }
-
 function drawOnlineFood(f){
   if(!f)return
   if(f.type==='rainbow'){
     let t=Date.now()/300,g=oCtx.createLinearGradient(f.x,f.y,f.x+ONLINE_GRID,f.y+ONLINE_GRID)
     g.addColorStop(0,`hsl(${(t*60)%360},100%,60%)`);g.addColorStop(0.5,`hsl(${(t*60+180)%360},100%,60%)`);g.addColorStop(1,`hsl(${(t*60+360)%360},100%,60%)`)
     oCtx.fillStyle=g;oCtx.fillRect(f.x+1,f.y+1,ONLINE_GRID-2,ONLINE_GRID-2)
-  } else if(f.type==='diamond'){
-    try{oCtx.drawImage(diamondImg,f.x,f.y,ONLINE_GRID,ONLINE_GRID)}catch{oCtx.fillStyle='#00eeff';oCtx.fillRect(f.x+2,f.y+2,ONLINE_GRID-4,ONLINE_GRID-4)}
-  } else if(f.type==='salad'){
-    try{oCtx.drawImage(saladImg,f.x,f.y,ONLINE_GRID,ONLINE_GRID)}catch{oCtx.fillStyle='#7ec850';oCtx.fillRect(f.x+1,f.y+1,ONLINE_GRID-2,ONLINE_GRID-2)}
-  } else if(f.type==='gold'){
-    try{oCtx.drawImage(goldenAppleImg,f.x,f.y,ONLINE_GRID,ONLINE_GRID)}catch{oCtx.fillStyle='gold';oCtx.fillRect(f.x,f.y,ONLINE_GRID,ONLINE_GRID)}
-  } else {
-    try{oCtx.drawImage(appleImg,f.x,f.y,ONLINE_GRID,ONLINE_GRID)}catch{oCtx.fillStyle='#ff4444';oCtx.fillRect(f.x,f.y,ONLINE_GRID,ONLINE_GRID)}
-  }
+  }else if(f.type==='diamond'){try{oCtx.drawImage(diamondImg,f.x,f.y,ONLINE_GRID,ONLINE_GRID)}catch{oCtx.fillStyle='#00eeff';oCtx.fillRect(f.x+2,f.y+2,ONLINE_GRID-4,ONLINE_GRID-4)}}
+  else if(f.type==='salad'){try{oCtx.drawImage(saladImg,f.x,f.y,ONLINE_GRID,ONLINE_GRID)}catch{oCtx.fillStyle='#7ec850';oCtx.fillRect(f.x+1,f.y+1,ONLINE_GRID-2,ONLINE_GRID-2)}}
+  else if(f.type==='gold'){try{oCtx.drawImage(goldenAppleImg,f.x,f.y,ONLINE_GRID,ONLINE_GRID)}catch{oCtx.fillStyle='gold';oCtx.fillRect(f.x,f.y,ONLINE_GRID,ONLINE_GRID)}}
+  else{try{oCtx.drawImage(appleImg,f.x,f.y,ONLINE_GRID,ONLINE_GRID)}catch{oCtx.fillStyle='#ff4444';oCtx.fillRect(f.x,f.y,ONLINE_GRID,ONLINE_GRID)}}
 }
-
 function updateOnlineHUD(){
   document.getElementById("onlineScore").innerText=oScore
   document.getElementById("onlineTail").innerText=oTail
@@ -1506,22 +1303,21 @@ function updateOnlineHUD(){
   document.getElementById("onlineTimer").innerText=m+":"+(s<10?"0":"")+s
 }
 
-/* ONLINE CONTROLS */
-function onlineKeydown(e){
-  if(e.key==="ArrowUp"&&oDy===0&&oNextDy===0){oNextDx=0;oNextDy=-ONLINE_GRID}
-  if(e.key==="ArrowDown"&&oDy===0&&oNextDy===0){oNextDx=0;oNextDy=ONLINE_GRID}
-  if(e.key==="ArrowLeft"&&oDx===0&&oNextDx===0){oNextDx=-ONLINE_GRID;oNextDy=0}
-  if(e.key==="ArrowRight"&&oDx===0&&oNextDx===0){oNextDx=ONLINE_GRID;oNextDy=0}
-  if(e.key==="w"&&oDy===0&&oNextDy===0){oNextDx=0;oNextDy=-ONLINE_GRID}
-  if(e.key==="s"&&oDy===0&&oNextDy===0){oNextDx=0;oNextDy=ONLINE_GRID}
-  if(e.key==="a"&&oDx===0&&oNextDx===0){oNextDx=-ONLINE_GRID;oNextDy=0}
-  if(e.key==="d"&&oDx===0&&oNextDx===0){oNextDx=ONLINE_GRID;oNextDy=0}
+/* CONTROLS ONLINE (WASD + flèches) */
+function onlineMobileDir(dir){
+  if(dir==="up"&&oDy===0&&oNextDy===0){oNextDx=0;oNextDy=-ONLINE_GRID}
+  if(dir==="down"&&oDy===0&&oNextDy===0){oNextDx=0;oNextDy=ONLINE_GRID}
+  if(dir==="left"&&oDx===0&&oNextDx===0){oNextDx=-ONLINE_GRID;oNextDy=0}
+  if(dir==="right"&&oDx===0&&oNextDx===0){oNextDx=ONLINE_GRID;oNextDy=0}
 }
-
-/* END ONLINE */
+function onlineKeydown(e){
+  if((e.key==="ArrowUp"||e.key==="w")&&oDy===0&&oNextDy===0){oNextDx=0;oNextDy=-ONLINE_GRID}
+  if((e.key==="ArrowDown"||e.key==="s")&&oDy===0&&oNextDy===0){oNextDx=0;oNextDy=ONLINE_GRID}
+  if((e.key==="ArrowLeft"||e.key==="a")&&oDx===0&&oNextDx===0){oNextDx=-ONLINE_GRID;oNextDy=0}
+  if((e.key==="ArrowRight"||e.key==="d")&&oDx===0&&oNextDx===0){oNextDx=ONLINE_GRID;oNextDy=0}
+}
 function endOnlineGame(){
-  clearInterval(oInterval);clearInterval(oTimerInterval)
-  oInterval=null;oTimerInterval=null
+  clearInterval(oInterval);clearInterval(oTimerInterval);oInterval=null;oTimerInterval=null
   document.removeEventListener("keydown",onlineKeydown)
   rtdb.ref('lobbies/'+currentLobbyId+'/presence/'+currentUser).remove()
   rtdb.ref('lobbies/'+currentLobbyId+'/presence').off()
@@ -1530,17 +1326,12 @@ function endOnlineGame(){
   rtdb.ref('lobbies/'+currentLobbyId+'/game/'+currentUser+'/finalScore').set(oScore)
   setTimeout(()=>showOnlineResults(),1500)
 }
-
 async function showOnlineResults(){
   let snap=await rtdb.ref('lobbies/'+currentLobbyId+'/game').once('value')
-  let gdata=snap.val()||{}
-  let results=[]
-  Object.entries(gdata).forEach(([name,pd])=>{
-    results.push({name,score:pd.finalScore||pd.score||0,color:oPlayers[name]?.color||'white'})
-  })
+  let gdata=snap.val()||{},results=[]
+  Object.entries(gdata).forEach(([name,pd])=>{results.push({name,score:pd.finalScore||pd.score||0,color:oPlayers[name]?.color||'white'})})
   results.sort((a,b)=>b.score-a.score)
-  document.getElementById("onlineGame").classList.add("hidden")
-  document.getElementById("deathScreen").classList.add("hidden")
+  cleanupOnlineUI()
   document.getElementById("onlineResultScreen").classList.remove("hidden")
   let list=document.getElementById("onlineResultList");list.innerHTML=""
   let medals=["🥇","🥈","🥉"]
@@ -1556,9 +1347,7 @@ async function showOnlineResults(){
     if(t<=0){
       clearInterval(ri)
       document.getElementById("onlineResultScreen").classList.add("hidden")
-      document.getElementById("invincibleBar").classList.add("hidden")
       document.getElementById("killFeed").innerHTML=""
-      // Remettre le lobby en waiting
       if(isLobbyChef){
         rtdb.ref('lobbies/'+currentLobbyId).update({status:'waiting'})
         rtdb.ref('lobbies/'+currentLobbyId+'/game').remove()
@@ -1566,6 +1355,7 @@ async function showOnlineResults(){
         rtdb.ref('lobbies/'+currentLobbyId+'/killfeed').remove()
         rtdb.ref('lobbies/'+currentLobbyId+'/playersInit').remove()
         rtdb.ref('lobbies/'+currentLobbyId+'/foods').remove()
+        rtdb.ref('lobbies/'+currentLobbyId+'/disconnected').remove()
       }
       enterLobbyRoom(currentLobbyId)
     }
